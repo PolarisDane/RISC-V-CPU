@@ -3,7 +3,7 @@ module alu (
     input wire                      rst_in;
     input wire                      rdy_in;
 
-    input wire [     `OP_TYPE]      opType;     
+    input wire [ `OPENUM_TYPE]      op;     
     input wire [   `DATA_TYPE]      rs1;
     input wire [   `DATA_TYPE]      rs2;
     input wire [   `ADDR_TYPE]      PC;
@@ -16,10 +16,10 @@ module alu (
 
 always @(*) begin
     branch = `FALSE;
-    case (OP_TYPE)
-        `OP_ADD: aluResult = rs1 + rs2;
-        `OP_SUB: aluResult = rs1 - rs2;
-        `OP_BNE: branch = (rs1 != rs2) ? `TRUE : `FALSE;
+    case (op)
+        `OPENUM_ADD: aluResult = rs1 + rs2;
+        `OPENUM_ADDI: aluResult = rs1 + imm;
+        `OPENUM_BNE: branch = (rs1 != rs2) ? `TRUE : `FALSE;
         default;
     endcase
 end
