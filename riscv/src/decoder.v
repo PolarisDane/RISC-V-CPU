@@ -49,6 +49,8 @@ always @(*) begin
         end
         //forward here if needed
         case (if_to_dc_opType)
+            `OP_RC begin
+            end
             `OP_RI begin
                 issue_imm = {
                     {21{if_to_dc_inst[31]}},//SEXT
