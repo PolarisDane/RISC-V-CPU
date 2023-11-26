@@ -7,6 +7,7 @@ module instructionfetcher (
     input wire                      mc_to_if_ready,
     input wire [  `ADDR_TYPE]       alterPC,
     output reg [  `ADDR_TYPE]       if_to_mc_PC,
+    output reg                      if_to_mc_ready,
 
     output reg                      if_to_dc_ready,
     output reg [    `OP_TYPE]       if_to_dc_opType,
