@@ -28,6 +28,8 @@ always @(*) begin
     endcase
 end
 
+Icache icache();
+
 always @(*) begin
     if_to_dc_ready = `FALSE;
     if (rst_in) begin
