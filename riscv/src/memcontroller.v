@@ -23,8 +23,8 @@ end
 
 always @(posedge clk_in) begin
     if (rst) begin
-        mc_to_if_ready = `FALSE;
-        mc_to_if_result = 0;
+        mc_to_if_ready <= `FALSE;
+        mc_to_if_result <= 0;
     end
     else if (!rdy) begin
 

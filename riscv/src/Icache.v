@@ -2,7 +2,7 @@
 `define ICACHE_INDEX_RANGE 31:11
 `define IACHE_SIZE 128
 
-module Icache(
+module Icache (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
