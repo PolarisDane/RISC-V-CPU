@@ -13,7 +13,13 @@ module instructionfetcher (
     output reg [    `OP_TYPE]       if_to_dc_opType,
     output reg [`OPENUM_TYPE]       if_to_dc_op,
     output reg [  `ADDR_TYPE]       if_to_dc_PC,
-    output reg [  `INST_TYPE]       if_to_dc_inst
+    output reg [  `INST_TYPE]       if_to_dc_inst,
+
+    input wire                      ic_to_if_hit,
+    input wire [  `INST_TYPE]       ic_to_if_hit_inst,
+    output reg                      if_to_ic_ready,
+    output reg [  `ADDR_TYPE]       if_to_ic_inst_addr,
+    output reg [  `INST_TYPE]       if_to_ic_inst
 );
 
     reg [  `ADDR_TYPE]  PC;
