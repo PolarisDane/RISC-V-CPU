@@ -9,8 +9,8 @@ module Icache (
 
     input wire  [  `ADDR_TYPE]      if_to_ic_inst_addr,
     input wire  [  `INST_TYPE]      if_to_ic_inst,
+    input wire                      if_to_ic_inst_valid,
     input wire                      if_to_ic_ready,
-
 
     output wire                     ic_to_if_hit,
     output wire [  `INST_TYPE]      ic_to_if_hit_inst

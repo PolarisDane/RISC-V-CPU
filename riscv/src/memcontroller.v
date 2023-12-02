@@ -11,11 +11,17 @@ module memcontroller (
 
     input wire [  `ADDR_TYPE]       if_to_mc_PC,
     input wire                      if_to_mc_ready,
-    output reg [  `DATA_TYPE]       mc_to_if_result,
-    output reg                      mc_to_if_ready
+    output reg [  `DATA_TYPE]       mc_to_if_inst,
+    output reg                      mc_to_if_ready,
+
+    //...
+    input wire                      lsb_to_mc_ready
 );
 
-    reg        [        31:0]       memResult;
+reg [                   31:0]       memResult;
+reg [                    2:0]       status;
+reg [                    2:0]       if_byte_index;
+reg [                    2:0]       lsb_byte_index;
 
 always @(*) begin
     
@@ -24,15 +30,33 @@ end
 always @(posedge clk_in) begin
     if (rst) begin
         mc_to_if_ready <= `FALSE;
-        mc_to_if_result <= 0;
+        mc_to_if_inst <= 0;
     end
     else if (!rdy) begin
-
+        ;
     end
     else begin
-        mc_to_if_ready = `FALSE;
-        mc_to_if_result = 0;
-
+        if (status == `STATUS_IDLE) begin
+            lsb_byte_index = 2'b00;
+        end
+        else begin
+            //...
+            lsb_byte_index = lsb_byte_index + 1;
+        end
+        if () begin
+            mc_to_if_ready = 0;
+            if_byte_index = 0;
+        end
+        if (if_to_mc_ready) begin
+            mc_to_if_inst[(byte_index + 1) * 8 - 1:byte_index * 8] = mem_to_mc_din;
+            if (byte_index == 2'b11) begin
+                mc_to_if_ready = `TRUE;
+                if_byte_index = 2'b00;
+            end
+            else begin
+                if_byte_index = if_byte_index + 1;
+            end
+        end
     end
 end
 

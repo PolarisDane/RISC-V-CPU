@@ -10,7 +10,6 @@ module instructionfetcher (
 
     input wire [  `INST_TYPE]       mc_to_if_inst,
     input wire                      mc_to_if_ready,
-    input wire [  `ADDR_TYPE]       alterPC,
     output reg [  `ADDR_TYPE]       if_to_mc_PC,
     output reg                      if_to_mc_ready,
 
@@ -22,9 +21,17 @@ module instructionfetcher (
 
     input wire                      ic_to_if_hit,
     input wire [  `INST_TYPE]       ic_to_if_hit_inst,
-    output reg                      if_to_ic_ready,
     output reg [  `ADDR_TYPE]       if_to_ic_inst_addr,
-    output reg [  `INST_TYPE]       if_to_ic_inst
+    output reg [  `INST_TYPE]       if_to_ic_inst,
+    output reg                      if_to_ic_inst_valid,
+    output reg                      if_to_ic_ready,
+
+    input wire                      rob_to_if_alter_pc_ready,
+    input wire [  `ADDR_TYPE]       rob_to_if_alter_pc,
+    input wire                      rob_to_pr_br_commit,
+    input wire                      rob_to_pr_br_taken,
+    input wire [  `ADDR_TYPE]       pr_to_if_predict,
+    output reg [  `ADDR_TYPE]       if_to_pr_PC
 );
 
 reg [           `STATUS_TYPE]       status;
@@ -52,11 +59,12 @@ Icache icache(
 );
 
 always @(*) begin
-    if_to_dc_ready = `FALSE;
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
         if_to_dc_ready <= `FALSE;
+        if_to_ic_ready <= `FALSE;
+        if_to_ic_inst_valid <= `FALSE;
         PC <= `BLANK_ADDR;
         nxtPC <= `BLANK_ADDR;
     end
@@ -65,35 +73,38 @@ always @(*) begin
     end
     else begin
         if (status == `STATUS_IDLE) begin
-            
-        end
-        else begin
-            if ic_to_if_hit begin
-                
-            end
-            else begin
-                if mc_to_if_ready begin
-                    
-                end
-            end
-        end
-        if (!mc_to_if_ready) begin
-
-            if ic_to_if_hit begin
-                
-            end
-            else begin
-                if_to_mc_PC = PC;
-                if_to_mc_ready = `TRUE;
-            end
+            if_to_ic_inst_valid = `FALSE;
+            if_to_ic_ready = `TRUE;
             if_to_dc_ready = `FALSE;
+            if (ic_to_if_hit) begin
+                if_to_dc_inst = ic_to_if_hit_inst;
+                if_to_dc_ready = `TRUE;
+                if_to_dc_PC = PC;
+                if_to_dc_opType = if_to_dc_inst[`OPTYPE_RANGE];
+                //...
+            end
+            else begin
+                if_to_mc_ready = `TRUE;
+                if_to_mc_PC <= PC;
+                status <= `STATUS_BUSY;
+            end
         end
         else begin
-            if_to_dc_ready = `TRUE;
-            if_to_dc_inst = mc_to_if_inst;
-            if_to_dc_PC = PC;
-            if_to_mc_PC = nxtPC;
-            PC = nxtPC;
+            if mc_to_if_ready begin
+                if_to_ic_inst_addr = PC;
+                if_to_ic_inst = mc_to_if_inst;
+                if_to_ic_ready = `TRUE;
+                if_to_ic_inst_valid = `TRUE;
+                if_to_dc_inst = mc_to_if_inst;
+                if_to_dc_ready = `TRUE;
+                if_to_dc_PC = PC;
+                if_to_dc_opType = mc_to_if_inst[`OPTYPE_RANGE];
+                //...
+                status <= `STATUS_IDLE;
+            end
+        end
+        /*
+        else begin
             if_to_dc_opType = mc_to_if_inst[`OPTYPE_RANGE];
             case (if_to_dc_opType)
                 `OP_RC begin
@@ -113,7 +124,7 @@ always @(*) begin
                 end
             endcase
             if 
-        end
+        end*/
     end
 end
 
