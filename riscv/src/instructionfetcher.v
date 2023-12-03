@@ -8,6 +8,8 @@ module instructionfetcher (
     input wire                      rst_in,
     input wire                      rdy_in,
 
+    input wire                      stall,
+
     input wire [  `INST_TYPE]       mc_to_if_inst,
     input wire                      mc_to_if_ready,
     output reg [  `ADDR_TYPE]       if_to_mc_PC,
@@ -69,6 +71,9 @@ always @(*) begin
         nxtPC <= `BLANK_ADDR;
     end
     else if (!rdy) begin
+        ;
+    end
+    else if (stall) begin
         ;
     end
     else begin
