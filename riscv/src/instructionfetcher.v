@@ -108,28 +108,6 @@ always @(*) begin
                 status <= `STATUS_IDLE;
             end
         end
-        /*
-        else begin
-            if_to_dc_opType = mc_to_if_inst[`OPTYPE_RANGE];
-            case (if_to_dc_opType)
-                `OP_RC begin
-                    if_to_dc_op = `OPENUM_ADD;
-                end
-                `OP_RI begin
-                    if_to_dc_op = `OPENUM_ADDI;
-                end
-                `OP_BR begin
-                    if_to_dc_op = `OPENUM_BNE;
-                end
-                `OP_LD begin
-                    if_to_dc_op = `OPENUM_LD;
-                end
-                `OP_ST begin
-                    if_to_dc_op = `OPENUM_ST;
-                end
-            endcase
-            if 
-        end*/
     end
 end
 
