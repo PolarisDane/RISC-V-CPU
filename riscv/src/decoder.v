@@ -1,4 +1,4 @@
-module decoder(
+module Decoder(
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,

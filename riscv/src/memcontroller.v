@@ -3,7 +3,7 @@
 `define STATUS_STORE 2'b10
 `define STATUS_IF 2'b11
 
-module memcontroller (
+module MemController (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,

@@ -1,4 +1,4 @@
-module alu (
+module ALU (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
@@ -18,6 +18,8 @@ module alu (
     output reg                      alu_branch,
     output reg [      `ADDR_TYPE]   alu_newPC
 );
+
+wire br_inst=;
 
 always @(*) begin
     alu_branch <= `FALSE;
@@ -59,10 +61,13 @@ always @(posedge clk_in) begin
         alu_branch <= 0;
         alu_newPC <= 0;
     end
-    else if (!rdy_in) begin
+    else if (!rdy_in || !rs_to_alu_ready) begin
         ;
     end
     else begin
+        if (rs_to_alu_op) begin
+
+        end
         if (branch) begin
             newPC <= PC + imm;
         end
