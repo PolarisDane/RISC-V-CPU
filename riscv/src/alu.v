@@ -6,6 +6,7 @@ module ALU (
 
     input wire                      rs_to_alu_ready,
     input wire [    `OPENUM_TYPE]   rs_to_alu_op,
+    input wire [        `OP_TYPE]   rs_to_alu_opType,
     input wire [      `DATA_TYPE]   rs_to_alu_rs1,
     input wire [      `DATA_TYPE]   rs_to_alu_rs2,
     input wire [ `ROB_INDEX_TYPE]   rs_to_alu_rob_index,
@@ -22,6 +23,7 @@ module ALU (
 wire br_inst=;
 
 always @(*) begin
+    alu_ready <= `FALSE;
     alu_branch <= `FALSE;
     case (op)
         `OPENUM_BEQ: branch <= (rs_to_alu_rs1 == rs_to_alu_rs2) ? `TRUE : `FALSE;
@@ -65,14 +67,38 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
-        if (rs_to_alu_op) begin
-
-        end
-        if (branch) begin
-            newPC <= PC + imm;
+        alu_ready <= `TRUE;
+        alu_rob_index <= rs_to_alu_rob_index;
+        if (rs_to_alu_opType == `OP_BR) begin
+            if (alu_branch) begin
+                alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
+            end
+            else begin
+                alu_newPC <= rs_to_alu_PC + 4;
+            end
         end
         else begin
-            newPC <= PC + 4;
+            case (rs_to_alu_opType)
+                `OP_JAL: begin
+                    alu_branch <= `TRUE;
+                    alu_result <= rs_to_alu_PC + 4;
+                    alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
+                end
+                `OP_JALR: begin
+                    alu_branch <= `TRUE;
+                    alu_result <= rs_to_alu_PC + 4;
+                    alu_newPC <= rs_to_alu_imm + rs_to_alu_rs1;
+                end
+                `OP_LUI: begin
+                    alu_result <= rs_to_alu_imm;
+                end
+                `OP_AUIPC begin
+                    alu_result <= rs_to_alu_imm + rs_to_alu_PC;
+                end
+                default: begin
+                    ;
+                end
+            endcase
         end
     end
 

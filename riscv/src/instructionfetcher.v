@@ -17,7 +17,6 @@ module InstructionFetcher (
 
     output reg                      if_to_dc_ready,
     output reg [    `OP_TYPE]       if_to_dc_opType,
-    output reg [`OPENUM_TYPE]       if_to_dc_op,
     output reg [  `ADDR_TYPE]       if_to_dc_PC,
     output reg [  `INST_TYPE]       if_to_dc_inst,
 
@@ -86,7 +85,6 @@ always @(*) begin
                 if_to_dc_ready = `TRUE;
                 if_to_dc_PC = PC;
                 if_to_dc_opType = if_to_dc_inst[`OPTYPE_RANGE];
-                //...
             end
             else begin
                 if_to_mc_ready = `TRUE;
@@ -104,7 +102,6 @@ always @(*) begin
                 if_to_dc_ready = `TRUE;
                 if_to_dc_PC = PC;
                 if_to_dc_opType = mc_to_if_inst[`OPTYPE_RANGE];
-                //...
                 status <= `STATUS_IDLE;
             end
         end
