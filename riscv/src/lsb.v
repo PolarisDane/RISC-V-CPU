@@ -1,4 +1,4 @@
-module lsb (
+module LoadStoreBuffer (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
@@ -45,6 +45,9 @@ reg [               `OPENUM_TYPE]      lsb_op[`LSB_SIZE-1:0];
 reg [                   `OP_TYPE]      lsb_opType[`LSB_SIZE-1:0]
 reg                                    lsb_ready[`LSB_SIZE-1:0];
 reg                                    lsb_busy[`LSB_SIZE-1:0];
+
+reg [                       31:0]       lsb_head;
+reg [                       31:0]       lsb_tail;
 
 reg [                       31:0]      vac_lsb;
 reg [                       31:0]      work_lsb;             

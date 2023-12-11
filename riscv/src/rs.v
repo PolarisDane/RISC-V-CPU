@@ -4,7 +4,7 @@ module ReservationStation (
     input wire                      rdy_in,
     input wire                      clr_in,
 
-    input wire                      issue_rs_ready,
+    input wire                      issue_ready,
     input wire [  `ROB_INDEX_TYPE]  issue_rob_index,
     input wire [         `OP_TYPE]  issue_opType,
     input wire [     `OPENUM_TYPE]  issue_op,
@@ -97,7 +97,7 @@ always @(posedge clk_in) begin
             rs_to_alu_imm <= rs_imm[work_rs];
             rs_busy[work_rs] <= `FALSE;
         end
-        if (issue_rs_ready) begin
+        if (issue_ready) begin
             rs_rob_index[vac_rs] <= issue_rob_index;
             rs_rs1[vac_rs] <= issue_rs1_val;
             rs_rs2[vac_rs] <= issue_rs2_val;
