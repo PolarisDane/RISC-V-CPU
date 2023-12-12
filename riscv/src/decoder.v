@@ -21,6 +21,10 @@ module Decoder(
     input wire [  `ROB_INDEX_TYPE]  alu_result_rob_index,
     input wire [       `DATA_TYPE]  alu_result_val,
 
+    input wire                      lsb_result_ready,
+    input wire [  `ROB_INDEX_TYPE]  lsb_result_rob_index,
+    input wire [       `DATA_TYPE]  lsb_result_val,
+
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rs1_ready,
     input wire [       `DATA_TYPE]  rob_to_dc_rs1_val,
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rs2_ready,
@@ -67,7 +71,7 @@ always @(*) begin
         end
         else if (alu_result_ready && alu_result_rob_index == reg_to_dc_rs1_depend) begin
             issue_rs1_val = alu_result_val;
-        end
+        end//change to combinational logic circuit maybe?
         else begin
             issue_rs1_depend = reg_to_dc_rs1_depend;
         end

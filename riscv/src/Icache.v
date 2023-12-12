@@ -6,6 +6,7 @@ module Icache (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
+    input wire                      clr_in,
 
     input wire  [  `ADDR_TYPE]      if_to_ic_inst_addr,
     input wire  [  `INST_TYPE]      if_to_ic_inst,
@@ -40,9 +41,11 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
-        cacheData[index] <= if_to_ic_inst;
-        cacheValid[index] <= 1'b1;
-        cacheTag[index] <= if_to_ic_inst_addr[`ICACHE_TAG_RANGE];
+        if (if_to_ic_inst_valid) begin
+            cacheData[index] <= if_to_ic_inst;
+            cacheValid[index] <= 1'b1;
+            cacheTag[index] <= if_to_ic_inst_addr[`ICACHE_TAG_RANGE];
+        end
     end
 end
 

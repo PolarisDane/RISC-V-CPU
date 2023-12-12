@@ -19,7 +19,6 @@ module MemController (
     output reg [  `DATA_TYPE]       mc_to_if_inst,
     output reg                      mc_to_if_ready,
 
-    //...
     input wire                      lsb_to_mc_ready,
     input wire [   `LEN_TYPE]       lsb_to_mc_len,
     input wire [    `OP_TYPE]       lsb_to_mc_opType,
