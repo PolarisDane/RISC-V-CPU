@@ -40,7 +40,7 @@ reg [                 `DATA_TYPE]      rs_imm[`RS_SIZE-1:0];
 reg [                 `ADDR_TYPE]      rs_PC[`RS_SIZE-1:0];
 reg [               `OPENUM_TYPE]      rs_op[`RS_SIZE-1:0];
 reg [                   `OP_TYPE]      rs_opType[`RS_SIZE-1:0];
-reg                                    rs_ready[`RS_SIZE-1:0];
+reg                                    rs_valid[`RS_SIZE-1:0];
 reg                                    rs_busy[`RS_SIZE-1:0];
 
 reg [                       31:0]      vac_rs;
@@ -51,7 +51,7 @@ always @(*) begin
     work_rs = `RS_SIZE;
     vac_rs = `RS_SIZE;
     for (i = 0; i < `RS_SIZE; i = i + 1) begin
-        rs_ready[i] = `FALSE;
+        rs_valid[i] = `FALSE;
         if (alu_to_rs_ready) begin
             if (rs_rs1_depend[i] == alu_to_rs_rob_index) begin
                 rs_rs1_val = alu_to_rs_result;
@@ -63,9 +63,9 @@ always @(*) begin
             end
         end
         if (!rs_rs1_depend[i] && !rs_rs2_depend[i]) begin
-            rs_ready[i] = `TRUE;
+            rs_valid[i] = `TRUE;
         end 
-        if (rs_ready[i] && work_rs == `RS_SIZE) begin
+        if (rs_valid[i] && work_rs == `RS_SIZE) begin
             work_rs = i;
         end
         if (!rs_busy[vac_rs] && vac_rs == `RS_SIZE) begin
@@ -107,7 +107,7 @@ always @(posedge clk_in) begin
             rs_PC[vac_rs] <= issue_PC;
             rs_op[vac_rs] <= issue_op;
             rs_opType[vac_rs] <= issue_opType;
-            rs_ready[vac_rs] <= `FALSE;
+            rs_valid[vac_rs] <= `FALSE;
             rs_busy[vac_rs] <= `TRUE;
         end
     end

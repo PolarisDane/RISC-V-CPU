@@ -26,33 +26,30 @@ module InstructionFetcher (
     output reg [  `ADDR_TYPE]       if_to_ic_inst_addr,
     output reg [  `INST_TYPE]       if_to_ic_inst,
     output reg                      if_to_ic_inst_valid,
-    output reg                      if_to_ic_ready,
 
     input wire                      rob_to_if_alter_pc_ready,
     input wire [  `ADDR_TYPE]       rob_to_if_alter_pc,
-    input wire                      rob_to_pr_br_commit,
-    input wire                      rob_to_pr_br_taken,
-    input wire [  `ADDR_TYPE]       pr_to_if_predict,
-    output reg [  `ADDR_TYPE]       if_to_pr_PC
+
+    input wire                      pr_to_if_jump
 );
 
 reg [           `STATUS_TYPE]       status;
 reg [             `ADDR_TYPE]       PC;
 reg [             `ADDR_TYPE]       nxtPC;
 
-Icache icache(
-        .clk_in                 (clk_in),
-        .rst_in                 (rst_in),
-        .rdy_in                 (rdy_in),
-        .clr_in                 (clr_in),
-        .if_to_ic_inst_addr     (if_to_ic_inst_addr),
-        .if_to_ic_inst          (if_to_ic_inst),
-        .if_to_ic_ready         (if_to_ic_ready),
-        .ic_to_if_hit           (ic_to_if_hit),
-        .ic_to_if_hit_inst      (ic_to_if_hit_inst)
-);
-
 always @(*) begin
+    if (if_to_dc_inst[`OPTYPE_RANGE] == `OP_JAL) begin
+        nxtPC <= PC + {{12{if_to_dc_inst[31]}},if_to_dc_inst[19:12],if_to_dc_inst[20],if_to_dc_inst[30:21],1'b0};
+    end
+    else if (if_to_dc_inst[`OPTYPE_RANGE] == `OP_BR && pr_to_if_prediction) begin
+        nxtPC <= PC + {{20{if_to_dc_inst[31]}},if_to_dc_inst[7],if_to_dc_inst[30:25],if_to_dc_inst[11:8],1'b0};
+    end
+    else begin
+        nxtPC <= PC + 4;
+    end
+end
+
+always @(posedge clk_in) begin
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
@@ -69,42 +66,41 @@ always @(*) begin
         ;
     end
     else begin
+        if_to_ic_inst_valid = `FALSE;
         if (rob_to_if_alter_pc_ready) begin
             PC = rob_to_if_alter_pc;
         end
-        if (status == `STATUS_IDLE) begin
-            if_to_ic_inst_valid = `FALSE;
-            if_to_ic_ready = `TRUE;
-            if_to_ic_inst_addr = nxtPC;
-            if_to_dc_ready = `FALSE;
+        else begin
             if (ic_to_if_hit) begin
                 if_to_dc_inst <= ic_to_if_hit_inst;
                 if_to_dc_ready <= `TRUE;
                 if_to_dc_PC <= PC;
-                PC <= nxtPC;
                 if_to_dc_opType <= if_to_dc_inst[`OPTYPE_RANGE];
+                PC <= nxtPC;
+                if_to_ic_inst_addr <= nxtPC;
             end
             else begin
-                if_to_mc_ready <= `TRUE;
-                if_to_mc_PC <= PC;
-                status <= `STATUS_BUSY;
+                if (status == `STATUS_IDLE) begin
+                    if_to_mc_ready <= `TRUE;
+                    if_to_mc_PC <= PC;
+                    status <= `STATUS_BUSY;
+                end
+                else begin
+                    if (mc_to_if_ready) begin
+                        if_to_ic_inst_addr <= PC;
+                        if_to_ic_inst <= mc_to_if_inst;
+                        if_to_ic_inst_valid <= `TRUE;
+                        if_to_dc_inst <= mc_to_if_inst;
+                        if_to_dc_ready <= `TRUE;
+                        if_to_dc_PC <= PC;
+                        if_to_dc_opType <= mc_to_if_inst[`OPTYPE_RANGE];
+                        PC <= nxtPC;
+                        if_to_ic_inst_addr <= nxtPC;
+                        status <= `STATUS_IDLE;
+                    end
+                end
             end
         end
-        else begin
-            if mc_to_if_ready begin
-                if_to_ic_inst_addr <= PC;
-                if_to_ic_inst <= mc_to_if_inst;
-                if_to_ic_ready <= `TRUE;
-                if_to_ic_inst_valid <= `TRUE;
-                if_to_dc_inst <= mc_to_if_inst;
-                if_to_dc_ready <= `TRUE;
-                if_to_dc_PC <= PC;
-                PC <= nxtPC;
-                if_to_dc_opType <= mc_to_if_inst[`OPTYPE_RANGE];
-                status <= `STATUS_IDLE;
-            end
-        end
-        nxtPC <= pr_to_if_predict_PC;
     end
 end
 

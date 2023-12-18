@@ -4,6 +4,8 @@ module Decoder(
     input wire                      rdy_in,
 
     input wire                      rob_full,
+    input wire                      rs_full,
+    input wire                      lsb_full,
 
     input wire [       `ADDR_TYPE]  if_to_dc_PC,
     input wire [       `INST_TYPE]  if_to_dc_inst,
