@@ -61,14 +61,16 @@ always @(posedge clk_in) begin
     end
     else begin
         if (rob_to_reg_commit) begin
-            reg_val[rob_to_reg_index] <= rob_to_reg_val;
-            if (reg_depend[rob_to_reg_rob_index] == rob_to_reg_rob_index) begin
-                reg_depend[rob_to_reg_index] <= 0;
-            end
+            if (rob_to_reg_index != 0) begin
+                reg_val[rob_to_reg_index] <= rob_to_reg_val;
+                if (reg_depend[rob_to_reg_rob_index] == rob_to_reg_rob_index) begin
+                   reg_depend[rob_to_reg_index] <= 0;
+                end
+            end//x0 can't be modified
         end
         if (issue_ready && issue_rd != 0) begin
             reg_depend[issue_rd] <= issue_rob_index;
-        end
+        end//x0 has no dependency
     end
 end
 

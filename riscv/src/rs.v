@@ -20,7 +20,9 @@ module ReservationStation (
     input wire [       `DATA_TYPE]  alu_to_rs_result,
     input wire [  `ROB_INDEX_TYPE]  alu_to_rs_rob_index,
 
-    //lsb
+    input wire                      lsb_to_rs_ready,
+    input wire [  `ROB_INDEX_TYPE]  lsb_to_rs_rob_index,
+    input wire [       `DATA_TYPE]  lsb_to_rs_result,
 
     output reg                      rs_to_alu_ready,
     output reg [    `OPENUM_TYPE]   rs_to_alu_op,
@@ -48,28 +50,38 @@ reg [                       31:0]      work_rs;
 integer i;                
 
 always @(*) begin
-    work_rs = `RS_SIZE;
-    vac_rs = `RS_SIZE;
+    work_rs <= `RS_SIZE;
+    vac_rs <= `RS_SIZE;
     for (i = 0; i < `RS_SIZE; i = i + 1) begin
-        rs_valid[i] = `FALSE;
+        rs_valid[i] <= `FALSE;
         if (alu_to_rs_ready) begin
-            if (rs_rs1_depend[i] == alu_to_rs_rob_index) begin
-                rs_rs1_val = alu_to_rs_result;
-                rs_rs1_depend[i] = 0;
+            if (rs_busy[i] && rs_rs1_depend[i] == alu_to_rs_rob_index) begin
+                rs_rs1_val <= alu_to_rs_result;
+                rs_rs1_depend[i] <= 0;
             end
-            if (rs_rs2_depend[i] == alu_to_rs_rob_index) begin
-                rs_rs2_val = alu_to_rs_result;
-                rs_rs2_depend[i] = 0;
+            if (rs_busy[i] && rs_rs2_depend[i] == alu_to_rs_rob_index) begin
+                rs_rs2_val <= alu_to_rs_result;
+                rs_rs2_depend[i] <= 0;
+            end
+        end
+        if (lsb_to_rs_ready) begin
+            if (rs_busy[i] && rs_rs1_depend[i] == lsb_to_rs_rob_index) begin
+                rs_rs1_val <= lsb_to_rs_result;
+                rs_rs1_depend <= 0;
+            end
+            if (rs_busy[i] && rs_rs2_depend[i] == lsb_to_rs_rob_index) begin
+                rs_rs2_val <= lsb_to_rs_result;
+                rs_rs2_depend <= 0;
             end
         end
         if (!rs_rs1_depend[i] && !rs_rs2_depend[i]) begin
-            rs_valid[i] = `TRUE;
+            rs_valid[i] <= `TRUE;
         end 
         if (rs_valid[i] && work_rs == `RS_SIZE) begin
-            work_rs = i;
+            work_rs <= i;
         end
         if (!rs_busy[vac_rs] && vac_rs == `RS_SIZE) begin
-            vac_rs = i;
+            vac_rs <= i;
         end
     end
 end

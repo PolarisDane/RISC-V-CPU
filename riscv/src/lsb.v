@@ -58,8 +58,8 @@ wire                                   lsb_empty;
       
 assign lsb_empty = (head == tail);
 assign lsb_full = (nxt_tail == head);
-assign nxt_head = (nxt_head + 1) % `LSB_SIZE;
-assign nxt_tail = (nxt_tail + 1) % `LSB_SIZE;
+assign nxt_head = (head + 1) % `LSB_SIZE;
+assign nxt_tail = (tail + 1) % `LSB_SIZE;
 
 integer i;
 

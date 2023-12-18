@@ -11,6 +11,7 @@ module Decoder(
     input wire [       `INST_TYPE]  if_to_dc_inst,
     input wire [         `OP_TYPE]  if_to_dc_opType,
     input wire                      if_to_dc_ready,
+    input wire                      if_to_dc_pred_br,
 
     output wire [ `REG_INDEX_TYPE]  dc_to_reg_rs1_pos,
     output wire [ `REG_INDEX_TYPE]  dc_to_reg_rs2_pos,
@@ -27,10 +28,13 @@ module Decoder(
     input wire [  `ROB_INDEX_TYPE]  lsb_result_rob_index,
     input wire [       `DATA_TYPE]  lsb_result_val,
 
+    input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rename_index,
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rs1_ready,
     input wire [       `DATA_TYPE]  rob_to_dc_rs1_val,
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rs2_ready,
     input wire [       `DATA_TYPE]  rob_to_dc_rs2_val,
+    output wire [ `ROB_INDEX_TYPE]  dc_to_rob_rs1_check,
+    output wire [ `ROB_INDEX_TYPE]  dc_to_rob_rs2_check,
 
     output reg                      issue_ready,
     output reg [         `OP_TYPE]  issue_opType,
@@ -43,24 +47,31 @@ module Decoder(
     output reg [       `DATA_TYPE]  issue_imm,
     output reg [       `ADDR_TYPE]  issue_PC,
     output reg                      issue_lsb_ready,
-    output reg                      issue_rs_ready
+    output reg                      issue_rs_ready,
+    output reg                      issue_pred_br
 );
 
+assign dc_to_reg_rs1_pos = if_to_dc_inst[`RS1_RANGE];
+assign dc_to_reg_rs2_pos = if_to_dc_inst[`RS2_RANGE];
+assign dc_to_rob_rs1_check = reg_to_dc_rs1_depend;
+assign dc_to_rob_rs2_check = reg_to_dc_rs2_depend;
+
 always @(*) begin
-    issue_ready = `FALSE;
-    issue_op = if_to_dc_op;
-    issue_opType = if_to_dc_opType;
-    issue_rs1_val = 0;
-    issue_rs1_depend = 0;
-    issue_rs2_val = 0;
-    issue_rs2_depend = 0;
-    issue_rd = if_to_dc_inst[7:0];
-    issue_imm = 0;
-    issue_PC = if_to_dc_PC;
-    if (rst_in || !if_to_dc_ready) begin
+    issue_ready <= `FALSE;
+    issue_op <= if_to_dc_op;
+    issue_opType <= if_to_dc_opType;
+    issue_rs1_val <= 0;
+    issue_rs1_depend <= 0;
+    issue_rs2_val <= 0;
+    issue_rs2_depend =< 0;
+    issue_rd <= if_to_dc_inst[`RD_RANGE];
+    issue_imm <= 0;
+    issue_PC <= if_to_dc_PC;
+    issue_pred_br <= if_to_dc_pred_br;
+    if (rst_in) begin
         issue_ready = `FALSE;
     end
-    else if (!rdy) begin
+    else if (!rdy || !if_to_dc_ready) begin
         ;
     end
     else begin
@@ -73,7 +84,10 @@ always @(*) begin
         end
         else if (alu_result_ready && alu_result_rob_index == reg_to_dc_rs1_depend) begin
             issue_rs1_val = alu_result_val;
-        end//change to combinational logic circuit maybe?
+        end
+        else if (lsb_result_ready && lsb_result_rob_index == reg_to_dc_rs1_depend) begin
+            issue_rs1_val = lsb_result_val;
+        end
         else begin
             issue_rs1_depend = reg_to_dc_rs1_depend;
         end
@@ -86,10 +100,12 @@ always @(*) begin
         else if (alu_result_ready && alu_result_rob_index == reg_to_dc_rs2_depend) begin
             issue_rs2_val = alu_result_val;
         end
+        else if (lsb_result_ready && lsb_result_rob_index == reg_to_dc_rs2_depend) begin
+            issue_rs2_val = lsb_result_val;
+        end
         else begin
             issue_rs2_depend = reg_to_dc_rs2_depend;
         end
-        //forward here if needed
         case (if_to_dc_opType)
             `OP_LUI begin
                 issue_op <= `OPENUM_LUI;

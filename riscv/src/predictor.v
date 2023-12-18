@@ -3,7 +3,7 @@ module Predictor (
     input wire                      rst_in,
     input wire                      rdy_in,
 
-    input wire                      rob_to_pr_br_commit,
+    input wire                      rob_to_pr_ready,
     input wire [  `ADDR_TYPE]       rob_to_pr_PC,
     input wire                      rob_to_pr_br_taken,
     input wire [  `ADDR_TYPE]       if_to_pr_PC,
@@ -28,7 +28,7 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
-        if (rob_to_pr_br_commit) begin
+        if (rob_to_pr_ready) begin
             case (pr_state[rob_index])
                 2'b00: begin
                     pr_state[rob_index] <= rob_to_pr_br_taken ? 2'b01 : 2'b00;
