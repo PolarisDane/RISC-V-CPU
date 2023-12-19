@@ -2,7 +2,6 @@ module RegisterFile (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
-    input wire                      clr_in,
 
     input wire                      issue_ready,
     input wire  [  `REG_INDEX_TYPE] issue_rd,

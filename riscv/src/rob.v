@@ -1,21 +1,21 @@
-module rob (
+module ReorderBuffer (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
     
-    input wire                      lsb_to_rob_ready,
-    input wire [       `DATA_TYPE]  lsb_to_rob_result,
-    input wire [  `ROB_INDEX_TYPE]  lsb_to_rob_rob_index,
+    input wire                      lsb_ready,
+    input wire [       `DATA_TYPE]  lsb_result,
+    input wire [  `ROB_INDEX_TYPE]  lsb_rob_index,
     output wire                     rob_to_lsb_ready,
     output wire [ `ROB_INDEX_TYPE]  rob_to_lsb_commit_index,
 
-    input wire                      alu_to_rob_ready,
-    input wire [       `DATA_TYPE]  alu_to_rob_result,
-    input wire [  `ROB_INDEX_TYPE]  alu_to_rob_rob_index,
-    input wire                      alu_to_rob_branch,
-    input wire [       `ADDR_TYPE]  alu_to_rob_newPC,
+    input wire                      alu_ready,
+    input wire [       `DATA_TYPE]  alu_result,
+    input wire [  `ROB_INDEX_TYPE]  alu_rob_index,
+    input wire                      alu_branch,
+    input wire [       `ADDR_TYPE]  alu_newPC,
 
-    input wire                      issue_rob_ready,
+    input wire                      issue_ready,
     input wire [         `OP_TYPE]  issue_opType,
     input wire [  `REG_INDEX_TYPE]  issue_rd,
     input wire [       `DATA_TYPE]  issue_imm,
@@ -68,10 +68,6 @@ assign rob_to_dc_rs2_val = rob_result[dc_to_rob_rs2_check];
 
 integer i;
 
-always @(*) begin
-
-end
-
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
         head <= 0;
@@ -86,15 +82,15 @@ always @(posedge clk_in) begin
     else begin
         rob_to_reg_commit <= `FALSE;
         rob_to_pr_ready <= `FALSE;
-        if (lsb_to_rob_ready) begin
-            rob_ready[lsb_to_rob_rob_index] <= 1;//must be head of rob
-            rob_result[lsb_to_rob_rob_index] <= lsb_to_rob_result;
+        if (lsb_ready) begin
+            rob_ready[lsb_rob_index] <= 1;//must be head of rob
+            rob_result[lsb_rob_index] <= lsb_result;
         end
-        if (alu_to_lsb_ready) begin
-            rob_ready[alu_to_rob_rob_index] <= 1;
-            rob_result[alu_to_rob_rob_index] <= alu_to_rob_result;
-            rob_brPC[alu_to_rob_rob_index] <= alu_to_rob_newPC;
-            rob_true_br[alu_to_rob_rob_index] <= alu_to_rob_branch;
+        if (alu_ready) begin
+            rob_ready[alu_rob_index] <= 1;
+            rob_result[alu_rob_index] <= alu_result;
+            rob_brPC[alu_rob_index] <= alu_newPC;
+            rob_true_br[alu_rob_index] <= alu_branch;
         end
         if (issue_rob_ready && !rob_full) begin
             rob_ready[nxt_tail] <= `FALSE;

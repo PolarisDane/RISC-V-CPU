@@ -2,6 +2,7 @@ module Decoder(
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
+    input wire                      clr_in,
 
     input wire                      rob_full,
     input wire                      rs_full,
@@ -12,6 +13,7 @@ module Decoder(
     input wire [         `OP_TYPE]  if_to_dc_opType,
     input wire                      if_to_dc_ready,
     input wire                      if_to_dc_pred_br,
+    output wire                     stall,
 
     output wire [ `REG_INDEX_TYPE]  dc_to_reg_rs1_pos,
     output wire [ `REG_INDEX_TYPE]  dc_to_reg_rs2_pos,
@@ -20,13 +22,13 @@ module Decoder(
     input wire [  `ROB_INDEX_TYPE]  reg_to_dc_rs1_depend,
     input wire [  `ROB_INDEX_TYPE]  reg_to_dc_rs2_depend,
 
-    input wire                      alu_result_ready,
-    input wire [  `ROB_INDEX_TYPE]  alu_result_rob_index,
-    input wire [       `DATA_TYPE]  alu_result_val,
+    input wire                      alu_ready,
+    input wire [  `ROB_INDEX_TYPE]  alu_rob_index,
+    input wire [       `DATA_TYPE]  alu_result,
 
-    input wire                      lsb_result_ready,
-    input wire [  `ROB_INDEX_TYPE]  lsb_result_rob_index,
-    input wire [       `DATA_TYPE]  lsb_result_val,
+    input wire                      lsb_ready,
+    input wire [  `ROB_INDEX_TYPE]  lsb_rob_index,
+    input wire [       `DATA_TYPE]  lsb_result,
 
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rename_index,
     input wire [  `ROB_INDEX_TYPE]  rob_to_dc_rs1_ready,
@@ -37,6 +39,7 @@ module Decoder(
     output wire [ `ROB_INDEX_TYPE]  dc_to_rob_rs2_check,
 
     output reg                      issue_ready,
+    output reg [  `ROB_INDEX_TYPE]  issue_rob_index,
     output reg [         `OP_TYPE]  issue_opType,
     output reg [     `OPENUM_TYPE]  issue_op,
     output reg [       `DATA_TYPE]  issue_rs1_val,
@@ -55,6 +58,7 @@ assign dc_to_reg_rs1_pos = if_to_dc_inst[`RS1_RANGE];
 assign dc_to_reg_rs2_pos = if_to_dc_inst[`RS2_RANGE];
 assign dc_to_rob_rs1_check = reg_to_dc_rs1_depend;
 assign dc_to_rob_rs2_check = reg_to_dc_rs2_depend;
+assign stall = rob_full || rs_full || lsb_full;
 
 always @(*) begin
     issue_ready <= `FALSE;
@@ -68,8 +72,11 @@ always @(*) begin
     issue_imm <= 0;
     issue_PC <= if_to_dc_PC;
     issue_pred_br <= if_to_dc_pred_br;
-    if (rst_in) begin
-        issue_ready = `FALSE;
+    issue_rob_index <= rob_to_dc_rename_index;
+    issue_lsb_ready <= `FALSE;
+    issue_rs_ready <= `FALSE;
+    if (rst_in || clr_in) begin
+        issue_ready <= `FALSE;
     end
     else if (!rdy || !if_to_dc_ready) begin
         ;
@@ -82,11 +89,11 @@ always @(*) begin
         else if (rob_to_dc_rs1_ready) begin
             issue_rs1_val = rob_to_dc_rs1_val;
         end
-        else if (alu_result_ready && alu_result_rob_index == reg_to_dc_rs1_depend) begin
-            issue_rs1_val = alu_result_val;
+        else if (alu_ready && alu_rob_index == reg_to_dc_rs1_depend) begin
+            issue_rs1_val = alu_val;
         end
-        else if (lsb_result_ready && lsb_result_rob_index == reg_to_dc_rs1_depend) begin
-            issue_rs1_val = lsb_result_val;
+        else if (lsb_ready && lsb_rob_index == reg_to_dc_rs1_depend) begin
+            issue_rs1_val = lsb_val;
         end
         else begin
             issue_rs1_depend = reg_to_dc_rs1_depend;
@@ -97,11 +104,11 @@ always @(*) begin
         else if (rob_to_dc_rs2_ready) begin
             issue_rs2_val = rob_to_dc_rs2_val;
         end
-        else if (alu_result_ready && alu_result_rob_index == reg_to_dc_rs2_depend) begin
-            issue_rs2_val = alu_result_val;
+        else if (alu_ready && alu_rob_index == reg_to_dc_rs2_depend) begin
+            issue_rs2_val = alu_val;
         end
-        else if (lsb_result_ready && lsb_result_rob_index == reg_to_dc_rs2_depend) begin
-            issue_rs2_val = lsb_result_val;
+        else if (lsb_ready && lsb_rob_index == reg_to_dc_rs2_depend) begin
+            issue_rs2_val = lsb_val;
         end
         else begin
             issue_rs2_depend = reg_to_dc_rs2_depend;

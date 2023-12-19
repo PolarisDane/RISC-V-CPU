@@ -9,33 +9,34 @@ module InstructionFetcher (
     input wire                      rdy_in,
     input wire                      clr_in,
 
-    input wire                      stall,
-
-    input wire [  `INST_TYPE]       mc_to_if_inst,
+    input wire [       `INST_TYPE]  mc_to_if_inst,
     input wire                      mc_to_if_ready,
-    output reg [  `ADDR_TYPE]       if_to_mc_PC,
+    output reg [       `ADDR_TYPE]  if_to_mc_PC,
     output reg                      if_to_mc_ready,
 
+    input wire                      stall,
     output reg                      if_to_dc_ready,
-    output reg [    `OP_TYPE]       if_to_dc_opType,
-    output reg [  `ADDR_TYPE]       if_to_dc_PC,
-    output reg [  `INST_TYPE]       if_to_dc_inst,
+    output reg [         `OP_TYPE]  if_to_dc_opType,
+    output reg [       `ADDR_TYPE]  if_to_dc_PC,
+    output reg [       `INST_TYPE]  if_to_dc_inst,
     output reg                      if_to_dc_pred_br,
 
     input wire                      ic_to_if_hit,
-    input wire [  `INST_TYPE]       ic_to_if_hit_inst,
-    output reg [  `ADDR_TYPE]       if_to_ic_inst_addr,
-    output reg [  `INST_TYPE]       if_to_ic_inst,
+    input wire [       `INST_TYPE]  ic_to_if_hit_inst,
+    output reg [       `ADDR_TYPE]  if_to_ic_inst_addr,
+    output reg [       `INST_TYPE]  if_to_ic_inst,
     output reg                      if_to_ic_inst_valid,
 
-    input wire [  `ADDR_TYPE]       rob_to_if_alter_pc,
+    input wire [       `ADDR_TYPE]  rob_to_if_alter_pc,
 
+    output wire [      `ADDR_TYPE]  if_to_pr_PC,
     input wire                      pr_to_if_prediction
 );
 
-reg [           `STATUS_TYPE]       status;
-reg [             `ADDR_TYPE]       PC;
-reg [             `ADDR_TYPE]       nxtPC;
+reg [                `STATUS_TYPE]  status;
+reg [                  `ADDR_TYPE]  PC;
+reg [                  `ADDR_TYPE]  nxtPC;
+assign if_to_pr_PC = PC;
 
 always @(*) begin
     if_to_dc_pred_br <= pr_to_if_prediction;

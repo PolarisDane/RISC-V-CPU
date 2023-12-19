@@ -4,7 +4,7 @@ module ReservationStation (
     input wire                      rdy_in,
     input wire                      clr_in,
 
-    input wire                      issue_ready,
+    input wire                      issue_rs_ready,
     input wire [  `ROB_INDEX_TYPE]  issue_rob_index,
     input wire [         `OP_TYPE]  issue_opType,
     input wire [     `OPENUM_TYPE]  issue_op,
@@ -16,13 +16,13 @@ module ReservationStation (
     input wire [       `DATA_TYPE]  issue_imm,
     input wire [       `ADDR_TYPE]  issue_PC,
 
-    input wire                      alu_to_rs_ready,
-    input wire [       `DATA_TYPE]  alu_to_rs_result,
-    input wire [  `ROB_INDEX_TYPE]  alu_to_rs_rob_index,
+    input wire                      alu_ready,
+    input wire [       `DATA_TYPE]  alu_result,
+    input wire [  `ROB_INDEX_TYPE]  alu_rob_index,
 
-    input wire                      lsb_to_rs_ready,
-    input wire [  `ROB_INDEX_TYPE]  lsb_to_rs_rob_index,
-    input wire [       `DATA_TYPE]  lsb_to_rs_result,
+    input wire                      lsb_ready,
+    input wire [  `ROB_INDEX_TYPE]  lsb_rob_index,
+    input wire [       `DATA_TYPE]  lsb_result,
 
     output reg                      rs_to_alu_ready,
     output reg [    `OPENUM_TYPE]   rs_to_alu_op,
@@ -31,6 +31,8 @@ module ReservationStation (
     output reg [ `ROB_INDEX_TYPE]   rs_to_alu_rob_index,
     output reg [      `ADDR_TYPE]   rs_to_alu_PC,
     output reg [      `DATA_TYPE]   rs_to_alu_imm,
+
+    output wire                     rs_full
 );
 
 reg [            `ROB_INDEX_TYPE]      rs_rob_index[`RS_SIZE-1:0];
@@ -45,8 +47,10 @@ reg [                   `OP_TYPE]      rs_opType[`RS_SIZE-1:0];
 reg                                    rs_valid[`RS_SIZE-1:0];
 reg                                    rs_busy[`RS_SIZE-1:0];
 
+assign rs_full = (vac_rs == `RS_SIZE);
+
 reg [                       31:0]      vac_rs;
-reg [                       31:0]      work_rs;             
+reg [                       31:0]      work_rs;   
 integer i;                
 
 always @(*) begin
@@ -54,23 +58,23 @@ always @(*) begin
     vac_rs <= `RS_SIZE;
     for (i = 0; i < `RS_SIZE; i = i + 1) begin
         rs_valid[i] <= `FALSE;
-        if (alu_to_rs_ready) begin
-            if (rs_busy[i] && rs_rs1_depend[i] == alu_to_rs_rob_index) begin
-                rs_rs1_val <= alu_to_rs_result;
+        if (alu_ready) begin
+            if (rs_busy[i] && rs_rs1_depend[i] == alu_rob_index) begin
+                rs_rs1_val <= alu_result;
                 rs_rs1_depend[i] <= 0;
             end
-            if (rs_busy[i] && rs_rs2_depend[i] == alu_to_rs_rob_index) begin
-                rs_rs2_val <= alu_to_rs_result;
+            if (rs_busy[i] && rs_rs2_depend[i] == alu_rob_index) begin
+                rs_rs2_val <= alu_result;
                 rs_rs2_depend[i] <= 0;
             end
         end
-        if (lsb_to_rs_ready) begin
-            if (rs_busy[i] && rs_rs1_depend[i] == lsb_to_rs_rob_index) begin
-                rs_rs1_val <= lsb_to_rs_result;
+        if (lsb_ready) begin
+            if (rs_busy[i] && rs_rs1_depend[i] == lsb_rob_index) begin
+                rs_rs1_val <= lsb_result;
                 rs_rs1_depend <= 0;
             end
-            if (rs_busy[i] && rs_rs2_depend[i] == lsb_to_rs_rob_index) begin
-                rs_rs2_val <= lsb_to_rs_result;
+            if (rs_busy[i] && rs_rs2_depend[i] == lsb_rob_index) begin
+                rs_rs2_val <= lsb_result;
                 rs_rs2_depend <= 0;
             end
         end
@@ -85,7 +89,7 @@ always @(*) begin
         end
     end
 end
-
+//modify to hardware search later
 
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
