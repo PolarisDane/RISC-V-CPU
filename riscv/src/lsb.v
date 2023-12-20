@@ -1,3 +1,8 @@
+`include "def.v"
+
+`define STATUS_BUSY 2'b11
+`define STATUS_IDLE 2'b00
+
 module LoadStoreBuffer (
     input wire                      clk_in,
     input wire                      rst_in,
@@ -35,8 +40,8 @@ module LoadStoreBuffer (
     output wire                     lsb_full,
     output reg                      lsb_ready,
     output reg [      `DATA_TYPE]   lsb_result,
-    output reg [ `ROB_INDEX_TYPE]   lsb_rob_index
-)
+    output reg [ `ROB_INDEX_TYPE]   lsb_result_rob_index
+);
 
 reg [            `ROB_INDEX_TYPE]      lsb_rob_index[`LSB_SIZE-1:0];
 reg [                 `DATA_TYPE]      lsb_rs1_val[`LSB_SIZE-1:0];
@@ -49,12 +54,13 @@ reg [               `OPENUM_TYPE]      lsb_op[`LSB_SIZE-1:0];
 reg [                   `OP_TYPE]      lsb_opType[`LSB_SIZE-1:0];
 reg                                    lsb_valid[`LSB_SIZE-1:0];
 
-reg [                        1:0]      status;
+reg [               `STATUS_TYPE]      status;
 reg [                 `LSB_RANGE]      head;
 reg [                 `LSB_RANGE]      tail;
 wire [                `LSB_RANGE]      nxt_head;
 wire [                `LSB_RANGE]      nxt_tail;              
-wire                                   lsb_empty;                
+wire                                   lsb_empty;
+reg [               `OPENUM_TYPE]      head_op;          
       
 assign lsb_empty = (head == tail);
 assign lsb_full = (nxt_tail == head);
@@ -65,35 +71,36 @@ integer i;
 
 always @(*) begin
     for (i = 0; i < `LSB_SIZE; i = i + 1) begin
-        lsb_valid[i] <= `FALSE;
+        lsb_valid[i] = `FALSE;
         if (alu_to_lsb_ready) begin
             if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
-                lsb_rs1_val[i] <= alu_to_lsb_result;
-                lsb_rs1_depend[i] <= 0;
+                lsb_rs1_val[i] = alu_to_lsb_result;
+                lsb_rs1_depend[i] = 0;
             end
             if (lsb_rs2_depend[i] == alu_to_lsb_rob_index) begin
-                lsb_rs2_val[i] <= alu_to_lsb_result;
-                lsb_rs2_depend[i] <= 0;
+                lsb_rs2_val[i] = alu_to_lsb_result;
+                lsb_rs2_depend[i] = 0;
             end
         end
         if (lsb_ready) begin
-            if (lsb_rs1_depend[i] == lsb_rob_index) begin
-                lsb_rs1_val[i] <= lsb_result;
-                lsb_rs1_depend[i] <= 0;
+            if (lsb_rs1_depend[i] == lsb_result_rob_index) begin
+                lsb_rs1_val[i] = lsb_result;
+                lsb_rs1_depend[i] = 0;
             end
-            if (lsb_rs2_depend[i] == lsb_rob_index) begin
-                lsb_rs2_val[i] <= lsb_result;
-                lsb_rs2_depend[i] <= 0;
+            if (lsb_rs2_depend[i] == lsb_result_rob_index) begin
+                lsb_rs2_val[i] = lsb_result;
+                lsb_rs2_depend[i] = 0;
             end
         end
         if (!lsb_rs1_depend[i] && !lsb_rs2_depend[i]) begin
-            lsb_valid[i] <= `TRUE;
+            lsb_valid[i] = `TRUE;
         end
     end
 end
 
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
+        status <= `STATUS_IDLE;
         head <= 0;
         tail <= 0;
         lsb_to_mc_ready <= `FALSE;
@@ -103,6 +110,7 @@ always @(posedge clk_in) begin
         ;
     end 
     else begin
+        lsb_ready <= `FALSE;
         if (issue_lsb_ready && !lsb_full) begin
             lsb_rob_index[nxt_tail] <= issue_rob_index;
             lsb_rs1_val[nxt_tail] <= issue_rs1_val;
@@ -118,27 +126,66 @@ always @(posedge clk_in) begin
         end
         case (status)
             `STATUS_IDLE: begin
-                lsb_ready <= `FALSE;
                 if (!lsb_empty && lsb_valid[nxt_head] && rob_to_lsb_ready && rob_to_lsb_commit_index == lsb_rob_index[nxt_head]) begin
                     head <= nxt_head;
-                    lsb_to_mc_ready = `TRUE;
+                    lsb_to_mc_ready <= `TRUE;
                     lsb_to_mc_addr <= lsb_rs1_val[nxt_head] + lsb_imm[nxt_head];
                     lsb_to_mc_data <= lsb_rs2_val[nxt_head];
                     lsb_to_mc_opType <= lsb_opType[nxt_head];
-                    lsb_rob_index <= lsb_rob_index[nxt_head];
-                    lsb_to_mc_len <= //TODO
+                    lsb_result_rob_index <= lsb_rob_index[nxt_head];
+                    head_op <= lsb_op[nxt_head];
+                    case (lsb_op[nxt_head])
+                        `OPENUM_LB: begin
+                            lsb_to_mc_len <= 2'b01;
+                        end
+                        `OPENUM_LH: begin
+                            lsb_to_mc_len <= 2'b10;
+                        end
+                        `OPENUM_LW: begin
+                            lsb_to_mc_len <= 2'b11;
+                        end
+                        `OPENUM_LBU: begin
+                            lsb_to_mc_len <= 2'b01;
+                        end
+                        `OPENUM_LHU: begin
+                            lsb_to_mc_len <= 2'b10;
+                        end
+                        `OPENUM_SB: begin
+                            lsb_to_mc_len <= 2'b01;
+                        end
+                        `OPENUM_SH: begin
+                            lsb_to_mc_len <= 2'b10;
+                        end
+                        `OPENUM_SW: begin
+                            lsb_to_mc_len <= 2'b11;
+                        end
+                    endcase
                     status <= `STATUS_BUSY;
                 end
             end
             `STATUS_BUSY: begin
                 if (mc_to_lsb_ld_done) begin
-                    lsb_to_mc_ready = `FALSE;
-                    lsb_result <= mc_to_lsb_result;
+                    case (head_op)
+                        `OPENUM_LB: begin
+                            lsb_result <= {24'b0, mc_to_lsb_result[7:0]};
+                        end
+                        `OPENUM_LH: begin
+                            lsb_result <= {16'b0, mc_to_lsb_result[15:0]};
+                        end
+                        `OPENUM_LW: begin
+                            lsb_result <= mc_to_lsb_result;
+                        end
+                        `OPENUM_LBU: begin
+                            lsb_result <= {{24{mc_to_lsb_result[7]}}, mc_to_lsb_result[7:0]};
+                        end
+                        `OPENUM_LHU: begin
+                            lsb_result <= {{16{mc_to_lsb_result[15]}}, mc_to_lsb_result[15:0]};
+                        end
+                    endcase
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
                 end
                 if (mc_to_lsb_st_done) begin
-                    lsb_to_mc_ready = `FALSE;
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
                 end

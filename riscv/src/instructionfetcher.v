@@ -1,7 +1,7 @@
-`define STATUS_BUSY 2'b11;
-`define STATUS_IDLE 2'b00;
+`include "def.v"
 
-`include "Icache.v"
+`define STATUS_BUSY 2'b11
+`define STATUS_IDLE 2'b00
 
 module InstructionFetcher (
     input wire                      clk_in,
@@ -39,16 +39,26 @@ reg [                  `ADDR_TYPE]  nxtPC;
 assign if_to_pr_PC = PC;
 
 always @(*) begin
-    if_to_dc_pred_br <= pr_to_if_prediction;
-    if (if_to_dc_inst[`OPTYPE_RANGE] == `OP_JAL) begin
-        nxtPC <= PC + {{12{if_to_dc_inst[31]}},if_to_dc_inst[19:12],if_to_dc_inst[20],if_to_dc_inst[30:21],1'b0};
+    if_to_dc_pred_br = pr_to_if_prediction;
+    if (mc_to_if_inst[`OPTYPE_RANGE] == `OP_JALR) begin
+        nxtPC = PC + 4;
+        if_to_dc_pred_br = `FALSE;
     end
-    else if (if_to_dc_inst[`OPTYPE_RANGE] == `OP_BR && pr_to_if_prediction) begin
-        nxtPC <= PC + {{20{if_to_dc_inst[31]}},if_to_dc_inst[7],if_to_dc_inst[30:25],if_to_dc_inst[11:8],1'b0};
+    else if (mc_to_if_inst[`OPTYPE_RANGE] == `OP_JAL) begin
+        nxtPC = PC + {{12{mc_to_if_inst[31]}},mc_to_if_inst[19:12],mc_to_if_inst[20],mc_to_if_inst[30:21],1'b0};
+    end
+    else if (mc_to_if_inst[`OPTYPE_RANGE] == `OP_BR && pr_to_if_prediction) begin
+        nxtPC = PC + {{20{mc_to_if_inst[31]}},mc_to_if_inst[7],mc_to_if_inst[30:25],mc_to_if_inst[11:8],1'b0};
     end
     else begin
-        nxtPC <= PC + 4;
+        nxtPC = PC + 4;
     end
+end
+
+integer file_p;
+
+initial begin
+    file_p = $fopen("if.txt");
 end
 
 always @(posedge clk_in) begin
@@ -56,12 +66,11 @@ always @(posedge clk_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
         if_to_dc_ready <= `FALSE;
-        if_to_ic_ready <= `FALSE;
         if_to_ic_inst_valid <= `FALSE;
-        PC <= `BLANK_ADDR;
-        nxtPC <= `BLANK_ADDR;
+        PC <= 0;
+        nxtPC <= 0;
     end
-    else if (!rdy) begin
+    else if (!rdy_in) begin
         ;
     end
     else if (stall) begin
@@ -71,10 +80,12 @@ always @(posedge clk_in) begin
         if_to_dc_ready = `FALSE;
         if_to_ic_inst_valid = `FALSE;
         if (clr_in) begin
-            PC = rob_to_if_alter_pc;
+            status <= `STATUS_IDLE;
+            PC <= rob_to_if_alter_pc;
         end
         else begin
             if (ic_to_if_hit) begin
+                if_to_mc_ready <= `FALSE;
                 if_to_dc_inst <= ic_to_if_hit_inst;
                 if_to_dc_ready <= `TRUE;
                 if_to_dc_PC <= PC;
@@ -83,13 +94,16 @@ always @(posedge clk_in) begin
                 if_to_ic_inst_addr <= nxtPC;
             end
             else begin
+                $fdisplay(file_p, "if check");
                 if (status == `STATUS_IDLE) begin
+                    $fdisplay(file_p, "if idle");
                     if_to_mc_ready <= `TRUE;
                     if_to_mc_PC <= PC;
                     status <= `STATUS_BUSY;
                 end
                 else begin
                     if (mc_to_if_ready) begin
+                        if_to_mc_ready <= `FALSE;
                         if_to_ic_inst_addr <= PC;
                         if_to_ic_inst <= mc_to_if_inst;
                         if_to_ic_inst_valid <= `TRUE;
@@ -98,7 +112,6 @@ always @(posedge clk_in) begin
                         if_to_dc_PC <= PC;
                         if_to_dc_opType <= mc_to_if_inst[`OPTYPE_RANGE];
                         PC <= nxtPC;
-                        if_to_ic_inst_addr <= nxtPC;
                         status <= `STATUS_IDLE;
                     end
                 end

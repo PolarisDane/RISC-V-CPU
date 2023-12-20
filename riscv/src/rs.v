@@ -1,3 +1,5 @@
+`include "def.v"
+
 module ReservationStation (
     input wire                      clk_in,
     input wire                      rst_in,
@@ -26,6 +28,7 @@ module ReservationStation (
 
     output reg                      rs_to_alu_ready,
     output reg [    `OPENUM_TYPE]   rs_to_alu_op,
+    output reg [        `OP_TYPE]   rs_to_alu_opType,
     output reg [      `DATA_TYPE]   rs_to_alu_rs1,
     output reg [      `DATA_TYPE]   rs_to_alu_rs2,
     output reg [ `ROB_INDEX_TYPE]   rs_to_alu_rob_index,
@@ -54,45 +57,47 @@ reg [                       31:0]      work_rs;
 integer i;                
 
 always @(*) begin
-    work_rs <= `RS_SIZE;
-    vac_rs <= `RS_SIZE;
+    work_rs = `RS_SIZE;
+    vac_rs = `RS_SIZE;
     for (i = 0; i < `RS_SIZE; i = i + 1) begin
-        rs_valid[i] <= `FALSE;
+        rs_valid[i] = `FALSE;
         if (alu_ready) begin
             if (rs_busy[i] && rs_rs1_depend[i] == alu_rob_index) begin
-                rs_rs1_val <= alu_result;
-                rs_rs1_depend[i] <= 0;
+                rs_rs1_val[i] = alu_result;
+                rs_rs1_depend[i] = 0;
             end
             if (rs_busy[i] && rs_rs2_depend[i] == alu_rob_index) begin
-                rs_rs2_val <= alu_result;
-                rs_rs2_depend[i] <= 0;
+                rs_rs2_val[i] = alu_result;
+                rs_rs2_depend[i] = 0;
             end
         end
         if (lsb_ready) begin
             if (rs_busy[i] && rs_rs1_depend[i] == lsb_rob_index) begin
-                rs_rs1_val <= lsb_result;
-                rs_rs1_depend <= 0;
+                rs_rs1_val[i] = lsb_result;
+                rs_rs1_depend[i] = 0;
             end
             if (rs_busy[i] && rs_rs2_depend[i] == lsb_rob_index) begin
-                rs_rs2_val <= lsb_result;
-                rs_rs2_depend <= 0;
+                rs_rs2_val[i] = lsb_result;
+                rs_rs2_depend[i] = 0;
             end
         end
-        if (!rs_rs1_depend[i] && !rs_rs2_depend[i]) begin
-            rs_valid[i] <= `TRUE;
+        if (rs_busy[i] && !rs_rs1_depend[i] && !rs_rs2_depend[i]) begin
+            rs_valid[i] = `TRUE;
         end 
         if (rs_valid[i] && work_rs == `RS_SIZE) begin
-            work_rs <= i;
+            work_rs = i;
         end
-        if (!rs_busy[vac_rs] && vac_rs == `RS_SIZE) begin
-            vac_rs <= i;
+        if (!rs_busy[i] && vac_rs == `RS_SIZE) begin
+            vac_rs = i;
         end
     end
+    // $display("rs_full: %d, vac_rs: %d, work_rs: %d", rs_full, vac_rs, work_rs);
 end
 //modify to hardware search later
 
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
+        $display("rs reset");
         for (i = 0; i < `RS_SIZE; i = i + 1) begin
             rs_busy[i] <= `FALSE;
         end
@@ -102,6 +107,7 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
+        rs_to_alu_ready <= `FALSE;
         if (work_rs != `RS_SIZE) begin
             rs_to_alu_ready <= `TRUE;
             rs_to_alu_op <= rs_op[work_rs];
@@ -113,10 +119,10 @@ always @(posedge clk_in) begin
             rs_to_alu_imm <= rs_imm[work_rs];
             rs_busy[work_rs] <= `FALSE;
         end
-        if (issue_ready) begin
+        if (issue_rs_ready) begin
             rs_rob_index[vac_rs] <= issue_rob_index;
-            rs_rs1[vac_rs] <= issue_rs1_val;
-            rs_rs2[vac_rs] <= issue_rs2_val;
+            rs_rs1_val[vac_rs] <= issue_rs1_val;
+            rs_rs2_val[vac_rs] <= issue_rs2_val;
             rs_rs1_depend[vac_rs] <= issue_rs1_depend;
             rs_rs2_depend[vac_rs] <= issue_rs2_depend;
             rs_imm[vac_rs] <= issue_imm;

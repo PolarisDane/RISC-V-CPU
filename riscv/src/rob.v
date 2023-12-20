@@ -1,3 +1,5 @@
+`include "def.v"
+
 module ReorderBuffer (
     input wire                      clk_in,
     input wire                      rst_in,
@@ -24,15 +26,16 @@ module ReorderBuffer (
 
     input wire [  `ROB_INDEX_TYPE]  dc_to_rob_rs1_check,
     input wire [  `ROB_INDEX_TYPE]  dc_to_rob_rs2_check,
+    output wire [ `ROB_INDEX_TYPE]  rob_to_dc_rename_index,
     output wire                     rob_to_dc_rs1_ready,
     output wire [      `DATA_TYPE]  rob_to_dc_rs1_val,
     output wire                     rob_to_dc_rs2_ready,
     output wire [      `DATA_TYPE]  rob_to_dc_rs2_val,
 
-    output wire                     rob_to_reg_commit,
-    output wire [ `ROB_INDEX_TYPE]  rob_to_reg_rob_index,
-    output wire [ `REG_INDEX_TYPE]  rob_to_reg_index,
-    output wire [      `DATA_TYPE]  rob_to_reg_val,  
+    output reg                      rob_to_reg_commit,
+    output reg [  `ROB_INDEX_TYPE]  rob_to_reg_rob_index,
+    output reg [  `REG_INDEX_TYPE]  rob_to_reg_index,
+    output reg [       `DATA_TYPE]  rob_to_reg_val,  
 
     output reg                      clr_in,//wrong prediction, need to revert
     output reg  [      `ADDR_TYPE]  rob_to_if_alter_pc,
@@ -41,7 +44,7 @@ module ReorderBuffer (
     output reg                      rob_to_pr_br_taken,
 
     output wire                     rob_full
-)
+);
 
 reg [             `ROB_INDEX_TYPE]  head;
 reg [             `ROB_INDEX_TYPE]  tail;
@@ -61,10 +64,13 @@ assign rob_empty = (head == tail);
 assign rob_full = (nxt_tail == head);
 assign nxt_head = (head + 1) % `ROB_SIZE;
 assign nxt_tail = (tail + 1) % `ROB_SIZE;
+assign rob_to_dc_rename_index = nxt_tail;
 assign rob_to_dc_rs1_ready = rob_ready[dc_to_rob_rs1_check];
 assign rob_to_dc_rs1_val = rob_result[dc_to_rob_rs1_check];
 assign rob_to_dc_rs2_ready = rob_ready[dc_to_rob_rs2_check];
 assign rob_to_dc_rs2_val = rob_result[dc_to_rob_rs2_check];
+assign rob_to_lsb_ready = !rob_empty;
+assign rob_to_lsb_commit_index = nxt_head;
 
 integer i;
 
@@ -83,16 +89,16 @@ always @(posedge clk_in) begin
         rob_to_reg_commit <= `FALSE;
         rob_to_pr_ready <= `FALSE;
         if (lsb_ready) begin
-            rob_ready[lsb_rob_index] <= 1;//must be head of rob
+            rob_ready[lsb_rob_index] <= `TRUE;//must be head of rob
             rob_result[lsb_rob_index] <= lsb_result;
         end
         if (alu_ready) begin
-            rob_ready[alu_rob_index] <= 1;
+            rob_ready[alu_rob_index] <= `TRUE;
             rob_result[alu_rob_index] <= alu_result;
             rob_brPC[alu_rob_index] <= alu_newPC;
             rob_true_br[alu_rob_index] <= alu_branch;
         end
-        if (issue_rob_ready && !rob_full) begin
+        if (issue_ready && !rob_full) begin
             rob_ready[nxt_tail] <= `FALSE;
             rob_rd[nxt_tail] <= issue_rd;
             rob_opType[nxt_tail] <= issue_opType;
@@ -104,10 +110,11 @@ always @(posedge clk_in) begin
             tail <= nxt_tail;
         end
         if (rob_ready[nxt_head] && !rob_empty) begin
+            $display("rob committing");
             head <= nxt_head;
             if (rob_pred_br[nxt_head] != rob_true_br[nxt_head]) begin
-                    clr_in <= 1;
-                    rob_to_if_alter_pc <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
+                clr_in <= 1;
+                rob_to_if_alter_pc <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
             end//maybe JALR
             if (rob_opType[nxt_head] == `OP_BR) begin
                 rob_to_pr_ready <= `TRUE;

@@ -1,5 +1,6 @@
 // RISCV32I CPU top module
 // port modification allowed for debugging purposes
+`include "def.v"
 
 module cpu(
     input wire                      clk_in,			// system clock signal
@@ -47,7 +48,7 @@ wire [                 `ADDR_TYPE]  alu_newPC;
 //lsb broadcast
 wire                                lsb_ready;
 wire [                 `DATA_TYPE]  lsb_result;
-wire [            `ROB_INDEX_TYPE]  lsb_rob_index;
+wire [            `ROB_INDEX_TYPE]  lsb_result_rob_index;
 
 //rob with pr
 wire                                rob_to_pr_ready;
@@ -76,8 +77,8 @@ wire [            `ROB_INDEX_TYPE]  rob_to_lsb_commit_index;
 //issue signal
 wire                                issue_ready;
 wire [            `ROB_INDEX_TYPE]  issue_rob_index;
-wire [               `OPENUM_TYPE]  issue_opType;
-wire [                   `OP_TYPE]  issue_op;
+wire [                   `OP_TYPE]  issue_opType;
+wire [               `OPENUM_TYPE]  issue_op;
 wire [                 `DATA_TYPE]  issue_rs1_val;
 wire [            `ROB_INDEX_TYPE]  issue_rs1_depend;
 wire [                 `DATA_TYPE]  issue_rs2_val;
@@ -162,6 +163,30 @@ ALU alu(
     .alu_newPC(alu_newPC)
 );
 
+InstructionFetcher instructionfetcher(
+    .clk_in(clk_in),
+    .rst_in(rst_in),
+    .rdy_in(rdy_in),
+    .mc_to_if_inst(mc_to_if_inst),
+    .mc_to_if_ready(mc_to_if_ready),
+    .if_to_mc_PC(if_to_mc_PC),
+    .if_to_mc_ready(if_to_mc_ready),
+    .stall(stall),
+    .if_to_dc_ready(if_to_dc_ready),
+    .if_to_dc_opType(if_to_dc_opType),
+    .if_to_dc_PC(if_to_dc_PC),
+    .if_to_dc_inst(if_to_dc_inst),
+    .if_to_dc_pred_br(if_to_dc_pred_br),
+    .ic_to_if_hit(ic_to_if_hit),
+    .ic_to_if_hit_inst(ic_to_if_hit_inst),
+    .if_to_ic_inst_addr(if_to_ic_inst_addr),
+    .if_to_ic_inst(if_to_ic_inst),
+    .if_to_ic_inst_valid(if_to_ic_inst_valid),
+    .rob_to_if_alter_pc(rob_to_if_alter_pc),
+    .if_to_pr_PC(if_to_pr_PC),
+    .pr_to_if_prediction(pr_to_if_prediction)
+);
+
 Icache icache(
     .clk_in(clk_in),
     .rst_in(rst_in),
@@ -225,10 +250,10 @@ LoadStoreBuffer lsb(
     .lsb_full(lsb_full),
     .lsb_ready(lsb_ready),
     .lsb_result(lsb_result),
-    .lsb_rob_index(lsb_rob_index)
+    .lsb_result_rob_index(lsb_result_rob_index)
 );
 
-RegisterFile reg(
+RegisterFile regfile(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
@@ -272,7 +297,7 @@ Decoder decoder(
     .alu_rob_index(alu_rob_index),
     .lsb_ready(lsb_ready),
     .lsb_result(lsb_result),
-    .lsb_rob_index(lsb_rob_index),
+    .lsb_rob_index(lsb_result_rob_index),
     .rob_to_dc_rename_index(rob_to_dc_rename_index),
     .rob_to_dc_rs1_ready(rob_to_dc_rs1_ready),
     .rob_to_dc_rs1_val(rob_to_dc_rs1_val),
@@ -312,12 +337,12 @@ ReservationStation reservationstation(
     .issue_rd(issue_rd),
     .issue_imm(issue_imm),
     .issue_PC(issue_PC),
-    .alu_to_rs_ready(alu_to_rs_ready),
-    .alu_to_rs_result(alu_to_rs_result),
-    .alu_to_rs_rob_index(alu_to_rs_rob_index),
+    .alu_ready(alu_ready),
+    .alu_result(alu_result),
+    .alu_rob_index(alu_rob_index),
     .lsb_ready(lsb_ready),
     .lsb_result(lsb_result),
-    .lsb_rob_index(lsb_rob_index),
+    .lsb_rob_index(lsb_result_rob_index),
     .rs_to_alu_ready(rs_to_alu_ready),
     .rs_to_alu_op(rs_to_alu_op),
     .rs_to_alu_opType(rs_to_alu_opType),
@@ -326,7 +351,7 @@ ReservationStation reservationstation(
     .rs_to_alu_rob_index(rs_to_alu_rob_index),
     .rs_to_alu_PC(rs_to_alu_PC),
     .rs_to_alu_imm(rs_to_alu_imm),
-    .rs_full(rs_full),
+    .rs_full(rs_full)
 );
 
 ReorderBuffer reorderbuffer(
@@ -335,7 +360,7 @@ ReorderBuffer reorderbuffer(
     .rdy_in(rdy_in),
     .lsb_ready(lsb_ready),
     .lsb_result(lsb_result),
-    .lsb_rob_index(lsb_rob_index),
+    .lsb_rob_index(lsb_result_rob_index),
     .rob_to_lsb_ready(rob_to_lsb_ready),
     .rob_to_lsb_commit_index(rob_to_lsb_commit_index),
     .alu_ready(alu_ready),
@@ -351,6 +376,7 @@ ReorderBuffer reorderbuffer(
     .issue_pred_br(issue_pred_br),
     .dc_to_rob_rs1_check(dc_to_rob_rs1_check),
     .dc_to_rob_rs2_check(dc_to_rob_rs2_check),
+    .rob_to_dc_rename_index(rob_to_dc_rename_index),
     .rob_to_dc_rs1_ready(rob_to_dc_rs1_ready),
     .rob_to_dc_rs1_val(rob_to_dc_rs1_val),
     .rob_to_dc_rs2_ready(rob_to_dc_rs2_ready),
@@ -366,7 +392,5 @@ ReorderBuffer reorderbuffer(
     .rob_to_pr_br_taken(rob_to_pr_br_taken),
     .rob_full(rob_full)
 );
-
-
 
 endmodule

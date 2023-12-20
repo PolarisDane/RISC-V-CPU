@@ -1,6 +1,4 @@
-`define ICACHE_TAG_RANGE 10:2
-`define ICACHE_INDEX_RANGE 31:11
-`define IACHE_SIZE 128
+`include "def.v"
 
 module Icache (
     input wire                      clk_in,
@@ -13,31 +11,31 @@ module Icache (
 
     output wire                     ic_to_if_hit,
     output wire [  `INST_TYPE]      ic_to_if_hit_inst
-)
+);
 
 reg [              `INST_TYPE]      cacheData[`ICACHE_SIZE - 1:0];
 reg [       `ICACHE_TAG_RANGE]      cacheTag[`ICACHE_SIZE - 1:0];
 reg                                 cacheValid[`ICACHE_SIZE - 1:0];                
 
 wire [    `ICACHE_INDEX_RANGE]      index;
-wire [      `ICACHE_TAG_RANGE]        tag;
+wire [      `ICACHE_TAG_RANGE]      tag;
 
 assign index = if_to_ic_inst_addr[`ICACHE_INDEX_RANGE];
 assign tag = if_to_ic_inst_addr[`ICACHE_TAG_RANGE];
-assign ic_to_if_hit = (cacheTag[`ICACHE_INDEX_RANGE] == tag) && cacheValid[index];
+assign ic_to_if_hit = (cacheTag[index][`ICACHE_INDEX_RANGE] == tag) && cacheValid[index];
 assign ic_to_if_inst = cacheData[tag];
 
 integer i;
 
 always @(posedge clk_in) begin
     if (rst_in) begin
-        for (i = 0; i < ICACHE_SIZE; i= i + 1) begin
+        for (i = 0; i < `ICACHE_SIZE; i= i + 1) begin
             cacheData[i] <= 0;
             cacheTag[i] <= 0;
             cacheValid[i] <= 0;
         end
     end
-    else if (!rdy) begin
+    else if (!rdy_in) begin
         ;
     end
     else begin

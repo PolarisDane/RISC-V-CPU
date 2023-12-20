@@ -1,3 +1,5 @@
+`include "def.v"
+
 module Predictor (
     input wire                      clk_in,
     input wire                      rst_in,
@@ -8,13 +10,13 @@ module Predictor (
     input wire                      rob_to_pr_br_taken,
     input wire [  `ADDR_TYPE]       if_to_pr_PC,
     output wire                     pr_to_if_prediction
-)
+);
 
 reg [                    1:0]       pr_state[`PREDICTOR_SIZE-1:0];
-wire [`PREDICTOR_INDEX_RANGE]       rob_index;
+wire [`PREDICTOR_INDEX_RANGE]       index;
 
 assign prediction = pr_state[if_to_pr_PC[8:2]][1];
-assign rob_index = rob_to_pr_PC[8:2];
+assign index = rob_to_pr_PC[8:2];
 
 integer i;
 
@@ -29,18 +31,18 @@ always @(posedge clk_in) begin
     end
     else begin
         if (rob_to_pr_ready) begin
-            case (pr_state[rob_index])
+            case (pr_state[index])
                 2'b00: begin
-                    pr_state[rob_index] <= rob_to_pr_br_taken ? 2'b01 : 2'b00;
+                    pr_state[index] <= rob_to_pr_br_taken ? 2'b01 : 2'b00;
                 end
                 2'b01: begin
-                    pr_state[rob_index] <= rob_to_pr_br_taken ? 2'b11 : 2'b00;
+                    pr_state[index] <= rob_to_pr_br_taken ? 2'b11 : 2'b00;
                 end
                 2'b10: begin
-                    pr_state[rob_index] <= rob_to_pr_br_taken ? 2'b11 : 2'b00;
+                    pr_state[index] <= rob_to_pr_br_taken ? 2'b11 : 2'b00;
                 end
                 2'b11: begin
-                    pr_state[rob_index] <= rob_to_pr_br_taken ? 2'b11 : 2'b10;
+                    pr_state[index] <= rob_to_pr_br_taken ? 2'b11 : 2'b10;
                 end
             endcase
         end
