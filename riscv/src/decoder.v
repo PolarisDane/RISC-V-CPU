@@ -65,9 +65,16 @@ assign stall = rob_full || rs_full || lsb_full;
 always @(*) begin
     if (rst_in || clr_in) begin
         issue_ready = `FALSE;
+        issue_lsb_ready = `FALSE;
+        issue_rs_ready = `FALSE;
     end
-    else if (!rdy_in || !if_to_dc_ready) begin
+    else if (!rdy_in) begin
         ;
+    end
+    else if (!if_to_dc_ready) begin
+        issue_ready = `FALSE;
+        issue_lsb_ready = `FALSE;
+        issue_rs_ready = `FALSE;
     end
     else begin
         issue_ready = `TRUE;

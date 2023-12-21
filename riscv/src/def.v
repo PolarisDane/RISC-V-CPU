@@ -15,6 +15,7 @@
 `define ADDR_TYPE 31:0
 `define INST_TYPE 31:0
 `define ROB_INDEX_TYPE 4:0
+`define LSB_INDEX_TYPE 3:0
 `define REG_INDEX_TYPE 4:0
 `define OP_TYPE 6:0
 `define OPENUM_TYPE 5:0
@@ -29,8 +30,6 @@
 `define ICACHE_INDEX_RANGE 31:11
 `define PREDICTOR_INDEX_RANGE 6:0
 `define OPTYPE_RANGE 6:0
-`define LSB_RANGE 3:0
-`define ROB_RANGE 4:0
 `define LEN_TYPE 2:0
 
 `define FUNC3_ADD_SUB 3'b000

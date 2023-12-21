@@ -77,7 +77,7 @@ always @(posedge clk_in) begin
         ;
     end
     else if (stall) begin
-        ;
+        if_to_dc_ready = `FALSE;
     end
     else begin
         if_to_dc_ready = `FALSE;

@@ -56,17 +56,17 @@ reg [                   `OP_TYPE]      lsb_opType[`LSB_SIZE-1:0];
 reg                                    lsb_valid[`LSB_SIZE-1:0];
 
 reg [               `STATUS_TYPE]      status;
-reg [                 `LSB_RANGE]      head;
-reg [                 `LSB_RANGE]      tail;
-wire [                `LSB_RANGE]      nxt_head;
-wire [                `LSB_RANGE]      nxt_tail;              
+reg [            `LSB_INDEX_TYPE]      head;
+reg [            `LSB_INDEX_TYPE]      tail;
+wire [           `LSB_INDEX_TYPE]      nxt_head;
+wire [           `LSB_INDEX_TYPE]      nxt_tail;              
 wire                                   lsb_empty;
 reg [               `OPENUM_TYPE]      head_op;          
       
 assign lsb_empty = (head == tail);
-assign lsb_full = (nxt_tail == head);
-assign nxt_head = (head + 1) % `LSB_SIZE;
-assign nxt_tail = (tail + 1) % `LSB_SIZE;
+assign lsb_full = (nxt_tail == head) || (head == 0 && nxt_tail == `LSB_SIZE - 1);
+assign nxt_head = (head + 1 == `LSB_SIZE) ? 1 : head + 1;
+assign nxt_tail = (tail + 1 == `LSB_SIZE) ? 1 : tail + 1;
 
 integer i;
 

@@ -61,9 +61,9 @@ wire [            `ROB_INDEX_TYPE]  nxt_tail;
 wire                                rob_empty;
 
 assign rob_empty = (head == tail);
-assign rob_full = (nxt_tail == head);
-assign nxt_head = (head + 1) % `ROB_SIZE;
-assign nxt_tail = (tail + 1) % `ROB_SIZE;
+assign rob_full = (nxt_tail == head) || (head == 0 && nxt_tail == `ROB_SIZE - 1);
+assign nxt_head = (head + 1 == `ROB_SIZE) ? 1 : head + 1;
+assign nxt_tail = (tail + 1 == `ROB_SIZE) ? 1 : tail + 1;
 assign rob_to_dc_rename_index = nxt_tail;
 assign rob_to_dc_rs1_ready = rob_ready[dc_to_rob_rs1_check];
 assign rob_to_dc_rs1_val = rob_result[dc_to_rob_rs1_check];
