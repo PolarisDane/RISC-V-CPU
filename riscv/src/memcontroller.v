@@ -9,6 +9,7 @@ module MemController (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
+    input wire                      clr_in,
 
     input wire                      io_buffer_full,
     input wire [              7:0]  mem_to_mc_din,
@@ -20,25 +21,25 @@ module MemController (
     input wire                      if_to_mc_ready,
     output reg [       `DATA_TYPE]  mc_to_if_inst,
     output reg                      mc_to_if_ready,
-    output reg                      mc_to_if_valid,
 
     input wire                      lsb_to_mc_ready,
     input wire [        `LEN_TYPE]  lsb_to_mc_len,
     input wire [         `OP_TYPE]  lsb_to_mc_opType,
     input wire [       `DATA_TYPE]  lsb_to_mc_data,
     input wire [       `ADDR_TYPE]  lsb_to_mc_addr,
-    output reg                      mc_to_lsb_valid,
     output reg                      mc_to_lsb_ld_done,
     output reg                      mc_to_lsb_st_done,
-    output reg [       `DATA_TYPE]  mc_to_lsb_result
+    output reg [       `DATA_TYPE]  mc_to_lsb_result,
+    output wire                     mc_valid
 );
 
 reg [                        31:0]  memResult;
 reg [                         1:0]  status;
 reg [                         2:0]  byte_index;
+assign mc_valid = (status ==`STATUS_IDLE);
 
 always @(posedge clk_in) begin
-    if (rst_in) begin
+    if (rst_in || clr_in) begin
         status <= `STATUS_IDLE;
         mc_to_if_ready <= `FALSE;
         mc_to_if_inst <= 0;

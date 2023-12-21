@@ -31,12 +31,15 @@ module cpu(
 
 //revert signal
 wire                                clr_in;
-wire [                 `ADDR_TYPE]  rob_to_if_alter_pc;
+wire [                 `ADDR_TYPE]  rob_to_if_alter_PC;
 
 //full signal
 wire                                rob_full;
 wire                                lsb_full;
 wire                                rs_full;
+
+//mc signal
+wire                                mc_valid;
 
 //alu broadcast
 wire                                alu_ready;
@@ -167,6 +170,8 @@ InstructionFetcher instructionfetcher(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
+    .clr_in(clr_in),
+    .mc_valid(mc_valid),
     .mc_to_if_inst(mc_to_if_inst),
     .mc_to_if_ready(mc_to_if_ready),
     .if_to_mc_PC(if_to_mc_PC),
@@ -182,7 +187,7 @@ InstructionFetcher instructionfetcher(
     .if_to_ic_inst_addr(if_to_ic_inst_addr),
     .if_to_ic_inst(if_to_ic_inst),
     .if_to_ic_inst_valid(if_to_ic_inst_valid),
-    .rob_to_if_alter_pc(rob_to_if_alter_pc),
+    .rob_to_if_alter_PC(rob_to_if_alter_PC),
     .if_to_pr_PC(if_to_pr_PC),
     .pr_to_if_prediction(pr_to_if_prediction)
 );
@@ -202,6 +207,7 @@ MemController memcontroller(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
+    .clr_in(clr_in),
     .io_buffer_full(io_buffer_full),
     .mem_to_mc_din(mem_din),
     .mc_to_mem_dout(mem_dout),
@@ -218,7 +224,8 @@ MemController memcontroller(
     .lsb_to_mc_addr(lsb_to_mc_addr),
     .mc_to_lsb_ld_done(mc_to_lsb_ld_done),
     .mc_to_lsb_st_done(mc_to_lsb_st_done),
-    .mc_to_lsb_result(mc_to_lsb_result)
+    .mc_to_lsb_result(mc_to_lsb_result),
+    .mc_valid(mc_valid)
 );
 
 LoadStoreBuffer lsb(
@@ -239,9 +246,13 @@ LoadStoreBuffer lsb(
     .issue_PC(issue_PC),
     .rob_to_lsb_ready(rob_to_lsb_ready),
     .rob_to_lsb_commit_index(rob_to_lsb_commit_index),
+    .alu_to_lsb_ready(alu_to_lsb_ready),
+    .alu_to_lsb_result(alu_to_lsb_result),
+    .alu_to_lsb_rob_index(alu_to_lsb_rob_index),
     .mc_to_lsb_ld_done(mc_to_lsb_ld_done),
     .mc_to_lsb_st_done(mc_to_lsb_st_done),
     .mc_to_lsb_result(mc_to_lsb_result),
+    .mc_valid(mc_valid),
     .lsb_to_mc_ready(lsb_to_mc_ready),
     .lsb_to_mc_len(lsb_to_mc_len),
     .lsb_to_mc_opType(lsb_to_mc_opType),
@@ -386,7 +397,7 @@ ReorderBuffer reorderbuffer(
     .rob_to_reg_index(rob_to_reg_index),
     .rob_to_reg_val(rob_to_reg_val),
     .clr_in(clr_in),
-    .rob_to_if_alter_pc(rob_to_if_alter_pc),
+    .rob_to_if_alter_PC(rob_to_if_alter_PC),
     .rob_to_pr_ready(rob_to_pr_ready),
     .rob_to_pr_PC(rob_to_pr_PC),
     .rob_to_pr_br_taken(rob_to_pr_br_taken),

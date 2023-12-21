@@ -9,6 +9,7 @@ module InstructionFetcher (
     input wire                      rdy_in,
     input wire                      clr_in,
 
+    input wire                      mc_valid,
     input wire [       `INST_TYPE]  mc_to_if_inst,
     input wire                      mc_to_if_ready,
     output reg [       `ADDR_TYPE]  if_to_mc_PC,
@@ -27,7 +28,7 @@ module InstructionFetcher (
     output reg [       `INST_TYPE]  if_to_ic_inst,
     output reg                      if_to_ic_inst_valid,
 
-    input wire [       `ADDR_TYPE]  rob_to_if_alter_pc,
+    input wire [       `ADDR_TYPE]  rob_to_if_alter_PC,
 
     output wire [      `ADDR_TYPE]  if_to_pr_PC,
     input wire                      pr_to_if_prediction
@@ -46,6 +47,7 @@ always @(*) begin
     end
     else if (mc_to_if_inst[`OPTYPE_RANGE] == `OP_JAL) begin
         nxtPC = PC + {{12{mc_to_if_inst[31]}},mc_to_if_inst[19:12],mc_to_if_inst[20],mc_to_if_inst[30:21],1'b0};
+        if_to_dc_pred_br = `TRUE;
     end
     else if (mc_to_if_inst[`OPTYPE_RANGE] == `OP_BR && pr_to_if_prediction) begin
         nxtPC = PC + {{20{mc_to_if_inst[31]}},mc_to_if_inst[7],mc_to_if_inst[30:25],mc_to_if_inst[11:8],1'b0};
@@ -62,6 +64,7 @@ initial begin
 end
 
 always @(posedge clk_in) begin
+    // $display("IF PC: %x", PC);
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
@@ -80,8 +83,10 @@ always @(posedge clk_in) begin
         if_to_dc_ready = `FALSE;
         if_to_ic_inst_valid = `FALSE;
         if (clr_in) begin
+            // $display("if PC altered!!!");
             status <= `STATUS_IDLE;
-            PC <= rob_to_if_alter_pc;
+            if_to_mc_ready <= `FALSE;
+            PC <= rob_to_if_alter_PC;
         end
         else begin
             if (ic_to_if_hit) begin
@@ -102,6 +107,9 @@ always @(posedge clk_in) begin
                     status <= `STATUS_BUSY;
                 end
                 else begin
+                    if (mc_valid) begin
+                        if_to_mc_ready <= `FALSE; 
+                    end
                     if (mc_to_if_ready) begin
                         if_to_mc_ready <= `FALSE;
                         if_to_ic_inst_addr <= PC;

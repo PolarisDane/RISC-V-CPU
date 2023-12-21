@@ -38,7 +38,7 @@ module ReorderBuffer (
     output reg [       `DATA_TYPE]  rob_to_reg_val,  
 
     output reg                      clr_in,//wrong prediction, need to revert
-    output reg  [      `ADDR_TYPE]  rob_to_if_alter_pc,
+    output reg  [      `ADDR_TYPE]  rob_to_if_alter_PC,
     output reg                      rob_to_pr_ready,  
     output reg  [      `ADDR_TYPE]  rob_to_pr_PC,
     output reg                      rob_to_pr_br_taken,
@@ -114,7 +114,7 @@ always @(posedge clk_in) begin
             head <= nxt_head;
             if (rob_pred_br[nxt_head] != rob_true_br[nxt_head]) begin
                 clr_in <= 1;
-                rob_to_if_alter_pc <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
+                rob_to_if_alter_PC <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
             end//maybe JALR
             if (rob_opType[nxt_head] == `OP_BR) begin
                 rob_to_pr_ready <= `TRUE;
