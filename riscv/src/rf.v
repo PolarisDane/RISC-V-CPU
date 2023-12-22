@@ -4,6 +4,7 @@ module RegisterFile (
     input wire                      clk_in,
     input wire                      rst_in,
     input wire                      rdy_in,
+    input wire                      clr_in,
 
     input wire                      issue_ready,
     input wire  [  `REG_INDEX_TYPE] issue_rd,
@@ -27,8 +28,10 @@ reg [              `ROB_INDEX_TYPE] reg_depend[`REG_SIZE-1:0];
 integer i;
 
 integer file_p;
+integer clk_cnt;
 
 initial begin
+    clk_cnt = 0;
     file_p = $fopen("reg.txt");
 end
 
@@ -38,7 +41,9 @@ assign reg_to_dc_rs2_val = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_de
 assign reg_to_dc_rs2_depend = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_depend[dc_to_reg_rs2_pos])) ? 0 : reg_depend[dc_to_reg_rs2_pos];
 
 always @(posedge clk_in) begin
-    $fdisplay(file_p, "reg_val: %d", reg_val[1]);
+    clk_cnt <= clk_cnt + 1;
+    $fdisplay(file_p, "clk: %d", clk_cnt);
+    $fdisplay(file_p, "reg t0: %x", reg_val[5]);
     if (rst_in) begin
         for (i = 0; i < `REG_SIZE; i = i + 1) begin
             reg_val[i] <= 0;
@@ -48,11 +53,16 @@ always @(posedge clk_in) begin
     else if (!rdy_in) begin
         ;
     end
+    else if (clr_in) begin
+        for (i = 0; i < `REG_SIZE; i = i + 1) begin
+            reg_depend[i] <= 0;
+        end
+    end
     else begin
         if (rob_to_reg_commit) begin
             $display("rob committing to regfile");
+            $display("rob index %d committing to reg %d val %x", rob_to_reg_rob_index, rob_to_reg_index, rob_to_reg_val);
             if (rob_to_reg_index != 0) begin
-                $display("rob committing to reg %d val %d", rob_to_reg_index, rob_to_reg_val);
                 reg_val[rob_to_reg_index] <= rob_to_reg_val;
                 if (reg_depend[rob_to_reg_index] == rob_to_reg_rob_index) begin
                    reg_depend[rob_to_reg_index] <= 0;

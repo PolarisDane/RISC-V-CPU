@@ -42,6 +42,8 @@ always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
         status <= `STATUS_IDLE;
         mc_to_if_ready <= `FALSE;
+        mc_to_lsb_ld_done <= `FALSE;
+        mc_to_lsb_st_done <= `FALSE;
         mc_to_if_inst <= 0;
     end
     else if (!rdy_in) begin

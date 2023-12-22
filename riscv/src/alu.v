@@ -60,7 +60,7 @@ always @(posedge clk_in) begin
         alu_ready <= `FALSE;
         alu_result <= 0;
         alu_rob_index <= 0;
-        alu_branch <= 0;
+        alu_branch <= `FALSE;
         alu_newPC <= 0;
     end
     else if (!rdy_in) begin
@@ -72,12 +72,7 @@ always @(posedge clk_in) begin
             alu_ready <= `TRUE;
             alu_rob_index <= rs_to_alu_rob_index;
             if (rs_to_alu_opType == `OP_BR) begin
-                if (alu_branch) begin
-                    alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
-                end
-                else begin
-                    alu_newPC <= rs_to_alu_PC + 4;
-                end
+                alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
             end
             else begin
                 case (rs_to_alu_opType)
@@ -89,7 +84,7 @@ always @(posedge clk_in) begin
                     `OP_JALR: begin
                         alu_branch <= `TRUE;
                         alu_result <= rs_to_alu_PC + 4;
-                        alu_newPC <= rs_to_alu_imm + rs_to_alu_rs1;
+                        alu_newPC <= (rs_to_alu_imm + rs_to_alu_rs1) & 32'hfffffffe;
                     end
                     `OP_LUI: begin
                         alu_result <= rs_to_alu_imm;

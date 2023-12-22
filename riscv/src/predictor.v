@@ -15,7 +15,7 @@ module Predictor (
 reg [                    1:0]       pr_state[`PREDICTOR_SIZE-1:0];
 wire [`PREDICTOR_INDEX_RANGE]       index;
 
-assign prediction = pr_state[if_to_pr_PC[8:2]][1];
+assign pr_to_if_prediction = pr_state[if_to_pr_PC[8:2]][1];
 assign index = rob_to_pr_PC[8:2];
 
 integer i;

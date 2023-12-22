@@ -97,7 +97,6 @@ end
 
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
-        $display("rs reset");
         for (i = 0; i < `RS_SIZE; i = i + 1) begin
             rs_busy[i] <= `FALSE;
         end

@@ -268,6 +268,7 @@ RegisterFile regfile(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
+    .clr_in(clr_in),
     .issue_ready(issue_ready),
     .issue_rd(issue_rd),
     .issue_rob_index(issue_rob_index),
@@ -402,6 +403,17 @@ ReorderBuffer reorderbuffer(
     .rob_to_pr_PC(rob_to_pr_PC),
     .rob_to_pr_br_taken(rob_to_pr_br_taken),
     .rob_full(rob_full)
+);
+
+Predictor predictor(
+    .clk_in(clk_in),
+    .rst_in(rst_in),
+    .rdy_in(rdy_in),
+    .rob_to_pr_ready(rob_to_pr_ready),
+    .rob_to_pr_PC(rob_to_pr_PC),
+    .rob_to_pr_br_taken(rob_to_pr_br_taken),
+    .if_to_pr_PC(if_to_pr_PC),
+    .pr_to_if_prediction(pr_to_if_prediction)
 );
 
 endmodule

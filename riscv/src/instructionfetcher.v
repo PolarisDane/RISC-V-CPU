@@ -54,17 +54,22 @@ always @(*) begin
     end
     else begin
         nxtPC = PC + 4;
+        if_to_dc_pred_br = `FALSE;
     end
 end
 
 integer file_p;
+integer clk_cnt;
 
 initial begin
     file_p = $fopen("if.txt");
+    clk_cnt = 0;
 end
 
 always @(posedge clk_in) begin
-    // $display("IF PC: %x", PC);
+    clk_cnt <= clk_cnt + 1;
+    // $display("clk: %d", clk_cnt);
+    // $display("PC: %x", PC);
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
