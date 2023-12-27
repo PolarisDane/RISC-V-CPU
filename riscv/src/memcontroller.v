@@ -50,14 +50,12 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
-        // $display("mc check");
         if (status == `STATUS_IDLE) begin
             byte_index <= 3'b000;
             mc_to_if_ready <= `FALSE;
             mc_to_lsb_ld_done <= `FALSE;
             mc_to_lsb_st_done <= `FALSE;
             //LSB goes first
-            // $display("mc idle");
             if (lsb_to_mc_ready) begin
                 if (lsb_to_mc_opType == `OP_LD) begin
                     mc_to_mem_addr <= lsb_to_mc_addr;

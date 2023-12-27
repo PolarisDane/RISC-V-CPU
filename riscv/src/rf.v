@@ -30,10 +30,10 @@ integer i;
 integer file_p;
 integer clk_cnt;
 
-initial begin
-    clk_cnt = 0;
-    file_p = $fopen("reg.txt");
-end
+// initial begin
+//     clk_cnt = 0;
+//     file_p = $fopen("reg.txt");
+// end
 
 assign reg_to_dc_rs1_val = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_depend[dc_to_reg_rs1_pos])) ? rob_to_reg_val : reg_val[dc_to_reg_rs1_pos];
 assign reg_to_dc_rs1_depend = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_depend[dc_to_reg_rs1_pos])) ? 0 : reg_depend[dc_to_reg_rs1_pos];
@@ -42,8 +42,8 @@ assign reg_to_dc_rs2_depend = (rob_to_reg_commit && (rob_to_reg_rob_index == reg
 
 always @(posedge clk_in) begin
     clk_cnt <= clk_cnt + 1;
-    $fdisplay(file_p, "clk: %d", clk_cnt);
-    $fdisplay(file_p, "reg t0: %x", reg_val[5]);
+    // $fdisplay(file_p, "clk: %d", clk_cnt);
+    // $fdisplay(file_p, "reg t0: %x", reg_val[5]);
     if (rst_in) begin
         for (i = 0; i < `REG_SIZE; i = i + 1) begin
             reg_val[i] <= 0;

@@ -49,15 +49,13 @@ assign nxtPC = cur_inst[`OPTYPE_RANGE] == `OP_JAL ? PC + {{12{cur_inst[31]}},cur
 integer file_p;
 integer clk_cnt;
 
-initial begin
-    file_p = $fopen("if.txt");
-    clk_cnt = 0;
-end
+// initial begin
+//     file_p = $fopen("if.txt");
+//     clk_cnt = 0;
+// end
 
 always @(posedge clk_in) begin
     clk_cnt <= clk_cnt + 1;
-    // $display("clk: %d", clk_cnt);
-    // $display("PC: %x", PC);
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
@@ -75,7 +73,6 @@ always @(posedge clk_in) begin
         if_to_dc_ready = `FALSE;
         if_to_ic_inst_valid = `FALSE;
         if (clr_in) begin
-            // $display("if PC altered!!!");
             status <= `STATUS_IDLE;
             if_to_mc_ready <= `FALSE;
             PC <= rob_to_if_alter_PC;
