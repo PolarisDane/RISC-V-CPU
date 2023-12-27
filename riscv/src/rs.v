@@ -28,7 +28,6 @@ module ReservationStation (
 
     output reg                      rs_to_alu_ready,
     output reg [    `OPENUM_TYPE]   rs_to_alu_op,
-    output reg [        `OP_TYPE]   rs_to_alu_opType,
     output reg [      `DATA_TYPE]   rs_to_alu_rs1,
     output reg [      `DATA_TYPE]   rs_to_alu_rs2,
     output reg [ `ROB_INDEX_TYPE]   rs_to_alu_rob_index,
@@ -110,7 +109,6 @@ always @(posedge clk_in) begin
         if (work_rs != `RS_SIZE) begin
             rs_to_alu_ready <= `TRUE;
             rs_to_alu_op <= rs_op[work_rs];
-            rs_to_alu_opType <= rs_opType[work_rs];
             rs_to_alu_rs1 <= rs_rs1_val[work_rs];
             rs_to_alu_rs2 <= rs_rs2_val[work_rs];
             rs_to_alu_rob_index <= rs_rob_index[work_rs];

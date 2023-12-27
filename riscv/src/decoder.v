@@ -62,7 +62,16 @@ assign dc_to_rob_rs1_check = reg_to_dc_rs1_depend;
 assign dc_to_rob_rs2_check = reg_to_dc_rs2_depend;
 assign stall = rob_full || rs_full || lsb_full;
 
+integer file_p;
+integer clk_cnt;
+
+initial begin
+    file_p = $fopen("decoder.txt");
+    clk_cnt = 0;
+end
+
 always @(*) begin
+    clk_cnt = clk_cnt + 1;
     if (rst_in || clr_in) begin
         issue_ready = `FALSE;
         issue_lsb_ready = `FALSE;
@@ -91,6 +100,11 @@ always @(*) begin
         issue_rob_index = rob_to_dc_rename_index;
         issue_lsb_ready = `FALSE;
         issue_rs_ready = `FALSE;
+        // if (dc_to_reg_rs1_pos == 21 && dc_to_reg_rs2_pos == 22) begin
+        //     $fdisplay(file_p, "clk_cnt:%d", clk_cnt);
+        //     $fdisplay(file_p, "PC:%x", if_to_dc_PC);
+        //     $fdisplay(file_p, "s5:%d s6:%d", reg_to_dc_rs1_val, reg_to_dc_rs2_val);
+        // end
         if (!reg_to_dc_rs1_depend) begin
             issue_rs1_val = reg_to_dc_rs1_val;
         end

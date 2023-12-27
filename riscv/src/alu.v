@@ -8,7 +8,6 @@ module ALU (
 
     input wire                      rs_to_alu_ready,
     input wire [    `OPENUM_TYPE]   rs_to_alu_op,
-    input wire [        `OP_TYPE]   rs_to_alu_opType,
     input wire [      `DATA_TYPE]   rs_to_alu_rs1,
     input wire [      `DATA_TYPE]   rs_to_alu_rs2,
     input wire [ `ROB_INDEX_TYPE]   rs_to_alu_rob_index,
@@ -23,15 +22,34 @@ module ALU (
 );
 
 always @(*) begin
-    alu_ready = `FALSE;
+    alu_ready = rs_to_alu_ready;
     alu_branch = `FALSE;
+    alu_rob_index = rs_to_alu_rob_index;
     case (rs_to_alu_op)
-        `OPENUM_BEQ: alu_branch = (rs_to_alu_rs1 == rs_to_alu_rs2) ? `TRUE : `FALSE;
-        `OPENUM_BNE: alu_branch = (rs_to_alu_rs1 != rs_to_alu_rs2) ? `TRUE : `FALSE;
-        `OPENUM_BLT: alu_branch = ($signed(rs_to_alu_rs1) < $signed(rs_to_alu_rs2)) ? `TRUE : `FALSE;
-        `OPENUM_BGE: alu_branch = ($signed(rs_to_alu_rs1) >= $signed(rs_to_alu_rs2)) ? `TRUE : `FALSE;
-        `OPENUM_BLTU: alu_branch = (rs_to_alu_rs1 < rs_to_alu_rs2) ? `TRUE : `FALSE;
-        `OPENUM_BGEU: alu_branch = (rs_to_alu_rs1 >= rs_to_alu_rs2) ? `TRUE : `FALSE;
+        `OPENUM_BEQ: begin
+            alu_branch = (rs_to_alu_rs1 == rs_to_alu_rs2) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_BNE: begin
+            alu_branch = (rs_to_alu_rs1 != rs_to_alu_rs2) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_BLT: begin
+            alu_branch = ($signed(rs_to_alu_rs1) < $signed(rs_to_alu_rs2)) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_BGE: begin
+            alu_branch = ($signed(rs_to_alu_rs1) >= $signed(rs_to_alu_rs2)) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_BLTU: begin
+            alu_branch = (rs_to_alu_rs1 < rs_to_alu_rs2) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_BGEU: begin
+            alu_branch = (rs_to_alu_rs1 >= rs_to_alu_rs2) ? `TRUE : `FALSE;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
         `OPENUM_ADDI: alu_result = rs_to_alu_rs1 + rs_to_alu_imm;
         `OPENUM_SLTI: alu_result = ($signed(rs_to_alu_rs1) < $signed(rs_to_alu_imm));
         `OPENUM_SLTIU: alu_result = rs_to_alu_rs1 < rs_to_alu_imm;
@@ -51,52 +69,19 @@ always @(*) begin
         `OPENUM_SRA: alu_result = rs_to_alu_rs1 >>> rs_to_alu_rs2;
         `OPENUM_OR: alu_result = rs_to_alu_rs1 | rs_to_alu_rs2;
         `OPENUM_AND: alu_result = rs_to_alu_rs1 & rs_to_alu_rs2;
+        `OPENUM_LUI: alu_result = rs_to_alu_imm;
+        `OPENUM_AUIPC: alu_result = rs_to_alu_imm + rs_to_alu_PC;
+        `OPENUM_JAL: begin
+            alu_branch = `TRUE;
+            alu_result = rs_to_alu_PC + 4;
+            alu_newPC = rs_to_alu_PC + rs_to_alu_imm;
+        end
+        `OPENUM_JALR: begin
+            alu_branch = `TRUE;
+            alu_result = rs_to_alu_PC + 4;
+            alu_newPC = (rs_to_alu_imm + rs_to_alu_rs1) & 32'hfffffffe;
+        end
         default;
     endcase
-end
-
-always @(posedge clk_in) begin
-    if (rst_in || clr_in) begin
-        alu_ready <= `FALSE;
-        alu_result <= 0;
-        alu_rob_index <= 0;
-        alu_branch <= `FALSE;
-        alu_newPC <= 0;
-    end
-    else if (!rdy_in) begin
-        ;
-    end
-    else begin
-        alu_ready <= `FALSE;
-        if (rs_to_alu_ready) begin
-            alu_ready <= `TRUE;
-            alu_rob_index <= rs_to_alu_rob_index;
-            if (rs_to_alu_opType == `OP_BR) begin
-                alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
-            end
-            else begin
-                case (rs_to_alu_opType)
-                    `OP_JAL: begin
-                        alu_branch <= `TRUE;
-                        alu_result <= rs_to_alu_PC + 4;
-                        alu_newPC <= rs_to_alu_PC + rs_to_alu_imm;
-                    end
-                    `OP_JALR: begin
-                        alu_branch <= `TRUE;
-                        alu_result <= rs_to_alu_PC + 4;
-                        alu_newPC <= (rs_to_alu_imm + rs_to_alu_rs1) & 32'hfffffffe;
-                    end
-                    `OP_LUI: begin
-                        alu_result <= rs_to_alu_imm;
-                    end
-                    `OP_AUIPC: begin
-                        alu_result <= rs_to_alu_imm + rs_to_alu_PC;
-                    end
-                    default;
-                endcase
-            end
-        end
-    end
-
 end
 endmodule

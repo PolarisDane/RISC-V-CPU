@@ -139,7 +139,6 @@ wire [                 `DATA_TYPE]  mc_to_lsb_result;
 //alu with rs
 wire                                rs_to_alu_ready;
 wire [               `OPENUM_TYPE]  rs_to_alu_op;
-wire [                   `OP_TYPE]  rs_to_alu_opType;
 wire [                 `DATA_TYPE]  rs_to_alu_rs1;
 wire [                 `DATA_TYPE]  rs_to_alu_rs2;
 wire [            `ROB_INDEX_TYPE]  rs_to_alu_rob_index;
@@ -153,7 +152,6 @@ ALU alu(
     .clr_in(clr_in),
     .rs_to_alu_ready(rs_to_alu_ready),
     .rs_to_alu_op(rs_to_alu_op),
-    .rs_to_alu_opType(rs_to_alu_opType),
     .rs_to_alu_rs1(rs_to_alu_rs1),
     .rs_to_alu_rs2(rs_to_alu_rs2),
     .rs_to_alu_rob_index(rs_to_alu_rob_index),
@@ -357,7 +355,6 @@ ReservationStation reservationstation(
     .lsb_rob_index(lsb_result_rob_index),
     .rs_to_alu_ready(rs_to_alu_ready),
     .rs_to_alu_op(rs_to_alu_op),
-    .rs_to_alu_opType(rs_to_alu_opType),
     .rs_to_alu_rs1(rs_to_alu_rs1),
     .rs_to_alu_rs2(rs_to_alu_rs2),
     .rs_to_alu_rob_index(rs_to_alu_rob_index),

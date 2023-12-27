@@ -74,13 +74,17 @@ assign rob_to_lsb_commit_index = nxt_head;
 
 integer i;
 integer file_p;
+integer clk_cnt;
 
 initial begin
     file_p = $fopen("PC.txt");
+    clk_cnt = 0;
 end
 
 always @(posedge clk_in) begin
     // $display("rob head %d tail %d", head, tail);
+    clk_cnt <= clk_cnt + 1;
+    $fdisplay(file_p, "clk_cnt: %d", clk_cnt);
     if (rst_in || clr_in) begin
         head <= 0;
         tail <= 0;
@@ -93,8 +97,8 @@ always @(posedge clk_in) begin
     end
     else begin
         $fdisplay(file_p, "Issue PC: %x", issue_PC);
-        rob_to_reg_commit <= `FALSE;
         rob_to_pr_ready <= `FALSE;
+        rob_to_reg_commit <= `FALSE;
         if (lsb_ready) begin
             rob_ready[lsb_rob_index] <= `TRUE;//must be head of rob
             rob_result[lsb_rob_index] <= lsb_result;
@@ -117,13 +121,16 @@ always @(posedge clk_in) begin
             tail <= nxt_tail;
         end
         if (rob_ready[nxt_head] && !rob_empty) begin
-            // $display("rob committing");
             head <= nxt_head;
+            $fdisplay(file_p, "rob committing");
+            $fdisplay(file_p, "PC: %x", rob_PC[nxt_head]);
+            $fdisplay(file_p, "prediction: %d", rob_pred_br[nxt_head]);
+            $fdisplay(file_p, "true branch: %d", rob_true_br[nxt_head]);
             if (rob_pred_br[nxt_head] != rob_true_br[nxt_head]) begin
                 clr_in <= 1;
                 rob_to_if_alter_PC <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
-                // $fdisplay(file_p, "branch fail");
-                // $fdisplay(file_p, "PC changed to %x", rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head]);
+                $fdisplay(file_p, "branch fail");
+                $fdisplay(file_p, "PC changed to %x", rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head]);
             end//maybe JALR
             if (rob_opType[nxt_head] == `OP_BR) begin
                 rob_to_pr_ready <= `TRUE;
