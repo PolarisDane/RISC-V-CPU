@@ -53,7 +53,6 @@ reg [                 `DATA_TYPE]      lsb_imm[`LSB_SIZE-1:0];
 reg [                 `ADDR_TYPE]      lsb_PC[`LSB_SIZE-1:0];
 reg [               `OPENUM_TYPE]      lsb_op[`LSB_SIZE-1:0];
 reg [                   `OP_TYPE]      lsb_opType[`LSB_SIZE-1:0];
-reg                                    lsb_valid[`LSB_SIZE-1:0];
 
 reg [               `STATUS_TYPE]      status;
 reg [            `LSB_INDEX_TYPE]      head;
@@ -72,7 +71,6 @@ integer i;
 
 always @(*) begin
     for (i = 0; i < `LSB_SIZE; i = i + 1) begin
-        lsb_valid[i] = `FALSE;
         if (alu_to_lsb_ready) begin
             if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
                 lsb_rs1_val[i] = alu_to_lsb_result;
@@ -92,9 +90,6 @@ always @(*) begin
                 lsb_rs2_val[i] = lsb_result;
                 lsb_rs2_depend[i] = 0;
             end
-        end
-        if (!lsb_rs1_depend[i] && !lsb_rs2_depend[i]) begin
-            lsb_valid[i] = `TRUE;
         end
     end
 end
@@ -122,12 +117,11 @@ always @(posedge clk_in) begin
             lsb_PC[nxt_tail] <= issue_PC;
             lsb_op[nxt_tail] <= issue_op;
             lsb_opType[nxt_tail] <= issue_opType;
-            lsb_valid[nxt_tail] <= `FALSE;
             tail <= nxt_tail;
         end
         case (status)
             `STATUS_IDLE: begin
-                if (!lsb_empty && lsb_valid[nxt_head] && rob_to_lsb_ready && rob_to_lsb_commit_index == lsb_rob_index[nxt_head]) begin
+                if (!lsb_empty && !lsb_rs1_depend[nxt_head] && !lsb_rs2_depend[nxt_head] && rob_to_lsb_ready && rob_to_lsb_commit_index == lsb_rob_index[nxt_head]) begin
                     head <= nxt_head;
                     lsb_to_mc_ready <= `TRUE;
                     lsb_to_mc_addr <= lsb_rs1_val[nxt_head] + lsb_imm[nxt_head];
