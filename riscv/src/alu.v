@@ -56,9 +56,9 @@ always @(*) begin
         `OPENUM_XORI: alu_result = rs_to_alu_rs1 ^ rs_to_alu_imm;
         `OPENUM_ORI: alu_result = rs_to_alu_rs1 | rs_to_alu_imm;
         `OPENUM_ANDI: alu_result = rs_to_alu_rs1 & rs_to_alu_imm;
-        `OPENUM_SLLI: alu_result = rs_to_alu_rs1 << rs_to_alu_imm;
-        `OPENUM_SRLI: alu_result = rs_to_alu_rs1 >> rs_to_alu_imm;
-        `OPENUM_SRAI: alu_result = rs_to_alu_rs1 >>> rs_to_alu_imm;
+        `OPENUM_SLLI: alu_result = rs_to_alu_rs1 << rs_to_alu_imm[5:0];
+        `OPENUM_SRLI: alu_result = rs_to_alu_rs1 >> rs_to_alu_imm[5:0];
+        `OPENUM_SRAI: alu_result = rs_to_alu_rs1 >>> rs_to_alu_imm[5:0];
         `OPENUM_ADD: alu_result = rs_to_alu_rs1 + rs_to_alu_rs2;
         `OPENUM_SUB: alu_result = rs_to_alu_rs1 - rs_to_alu_rs2;
         `OPENUM_SLL: alu_result = rs_to_alu_rs1 << rs_to_alu_rs2;
