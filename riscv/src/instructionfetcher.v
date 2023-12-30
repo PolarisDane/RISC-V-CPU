@@ -50,10 +50,10 @@ assign nxtPC = cur_inst[`OPTYPE_RANGE] == `OP_JAL ? PC + {{12{cur_inst[31]}},cur
 integer file_p;
 integer clk_cnt;
 
-initial begin
-    file_p = $fopen("if.txt");
-    clk_cnt = 0;
-end
+// initial begin
+//     file_p = $fopen("if.txt");
+//     clk_cnt = 0;
+// end
 
 always @(posedge clk_in) begin
     clk_cnt <= clk_cnt + 1;
