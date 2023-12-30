@@ -118,7 +118,8 @@ wire                                if_to_mc_ready;
 //if with ic
 wire                                ic_to_if_hit;
 wire [                 `INST_TYPE]  ic_to_if_hit_inst;
-wire [                 `ADDR_TYPE]  if_to_ic_inst_addr;
+wire [                 `ADDR_TYPE]  if_to_ic_fetch_addr;
+wire [                 `ADDR_TYPE]  if_to_ic_update_addr;
 wire [                 `INST_TYPE]  if_to_ic_inst;
 wire                                if_to_ic_inst_valid;
 
@@ -182,7 +183,8 @@ InstructionFetcher instructionfetcher(
     .if_to_dc_pred_br(if_to_dc_pred_br),
     .ic_to_if_hit(ic_to_if_hit),
     .ic_to_if_hit_inst(ic_to_if_hit_inst),
-    .if_to_ic_inst_addr(if_to_ic_inst_addr),
+    .if_to_ic_fetch_addr(if_to_ic_fetch_addr),
+    .if_to_ic_update_addr(if_to_ic_update_addr),
     .if_to_ic_inst(if_to_ic_inst),
     .if_to_ic_inst_valid(if_to_ic_inst_valid),
     .rob_to_if_alter_PC(rob_to_if_alter_PC),
@@ -194,7 +196,8 @@ Icache icache(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
-    .if_to_ic_inst_addr(if_to_ic_inst_addr),
+    .if_to_ic_fetch_addr(if_to_ic_fetch_addr),
+    .if_to_ic_update_addr(if_to_ic_update_addr),
     .if_to_ic_inst(if_to_ic_inst),
     .if_to_ic_inst_valid(if_to_ic_inst_valid),
     .ic_to_if_hit(ic_to_if_hit),
