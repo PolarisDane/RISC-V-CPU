@@ -31,7 +31,7 @@ module LoadStoreBuffer (
     input wire                      mc_to_lsb_ld_done,
     input wire                      mc_to_lsb_st_done,
     input wire [  `DATA_TYPE]       mc_to_lsb_result,
-    input wire                      mc_valid,
+    input wire                      mc_to_lsb_valid,
     output reg                      lsb_to_mc_ready,
     output reg [   `LEN_TYPE]       lsb_to_mc_len,
     output reg [    `OP_TYPE]       lsb_to_mc_opType,
@@ -159,7 +159,7 @@ always @(posedge clk_in) begin
                 end
             end
             `STATUS_BUSY: begin
-                if (mc_valid) begin
+                if (mc_to_lsb_valid) begin
                     lsb_to_mc_ready <= `FALSE;
                 end
                 if (mc_to_lsb_ld_done) begin

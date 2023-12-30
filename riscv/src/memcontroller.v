@@ -30,13 +30,15 @@ module MemController (
     output reg                      mc_to_lsb_ld_done,
     output reg                      mc_to_lsb_st_done,
     output reg [       `DATA_TYPE]  mc_to_lsb_result,
-    output wire                     mc_valid
+    output wire                     mc_to_lsb_valid,
+    output wire                     mc_to_if_valid
 );
 
 reg [                        31:0]  memResult;
 reg [                         1:0]  status;
 reg [                         2:0]  byte_index;
-assign mc_valid = (status ==`STATUS_IDLE);
+assign mc_to_lsb_valid = (status == `STATUS_IDLE);
+assign mc_to_if_valid = (status == `STATUS_IDLE) && !lsb_to_mc_ready;
 
 always @(posedge clk_in) begin
     if (rst_in || clr_in) begin
