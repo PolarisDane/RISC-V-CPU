@@ -18,8 +18,6 @@ reg [              `INST_TYPE]      cacheData[`ICACHE_SIZE - 1:0];
 reg [       `ICACHE_TAG_RANGE]      cacheTag[`ICACHE_SIZE - 1:0];
 reg                                 cacheValid[`ICACHE_SIZE - 1:0];                
 
-wire [    `ICACHE_INDEX_RANGE]      index;
-wire [      `ICACHE_TAG_RANGE]      tag;
 wire [    `ICACHE_INDEX_RANGE]      fetch_index;
 wire [      `ICACHE_TAG_RANGE]      fetch_tag;
 wire [    `ICACHE_INDEX_RANGE]      update_index;
@@ -29,8 +27,8 @@ assign fetch_index = if_to_ic_fetch_addr[`ICACHE_INDEX_RANGE];
 assign fetch_tag = if_to_ic_fetch_addr[`ICACHE_TAG_RANGE];
 assign update_index = if_to_ic_update_addr[`ICACHE_INDEX_RANGE];
 assign update_tag = if_to_ic_update_addr[`ICACHE_TAG_RANGE];
-assign ic_to_if_hit = (cacheTag[fetch_index] == fetch_tag) && cacheValid[fetch_index];
-assign ic_to_if_inst = cacheData[fetch_index];
+assign ic_to_if_hit = cacheValid[fetch_index] && (cacheTag[fetch_index] == fetch_tag);
+assign ic_to_if_hit_inst = cacheData[fetch_index];
 
 integer i;
 
