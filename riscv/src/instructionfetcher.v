@@ -24,7 +24,8 @@ module InstructionFetcher (
 
     input wire                      ic_to_if_hit,
     input wire [       `INST_TYPE]  ic_to_if_hit_inst,
-    output reg [       `ADDR_TYPE]  if_to_ic_inst_addr,
+    output reg [       `ADDR_TYPE]  if_to_ic_fetch_addr,
+    output reg [       `ADDR_TYPE]  if_to_ic_update_addr,
     output reg [       `INST_TYPE]  if_to_ic_inst,
     output reg                      if_to_ic_inst_valid,
 
@@ -61,17 +62,18 @@ always @(posedge clk_in) begin
         if_to_mc_ready <= `FALSE;
         if_to_dc_ready <= `FALSE;
         if_to_ic_inst_valid <= `FALSE;
+        if_to_ic_fetch_addr <= 0;
         PC <= 0;
     end
     else if (!rdy_in) begin
         ;
     end
     else if (stall) begin
-        if_to_dc_ready = `FALSE;
+        if_to_dc_ready <= `FALSE;
     end
     else begin
-        if_to_dc_ready = `FALSE;
-        if_to_ic_inst_valid = `FALSE;
+        if_to_dc_ready <= `FALSE;
+        if_to_ic_inst_valid <= `FALSE;
         if (clr_in) begin
             status <= `STATUS_IDLE;
             if_to_mc_ready <= `FALSE;
@@ -85,7 +87,7 @@ always @(posedge clk_in) begin
                 if_to_dc_PC <= PC;
                 if_to_dc_opType <= if_to_dc_inst[`OPTYPE_RANGE];
                 if_to_dc_inst <= ic_to_if_hit_inst;
-                if_to_ic_inst_addr <= nxtPC;
+                if_to_ic_fetch_addr <= nxtPC;
                 PC <= nxtPC;
             end
             else begin
@@ -100,9 +102,10 @@ always @(posedge clk_in) begin
                     end
                     if (mc_to_if_ready) begin
                         if_to_mc_ready <= `FALSE;
-                        if_to_ic_inst_addr <= PC;
+                        if_to_ic_update_addr <= PC;
                         if_to_ic_inst <= mc_to_if_inst;
                         if_to_ic_inst_valid <= `TRUE;
+                        if_to_ic_fetch_addr <= nxtPC;
                         if_to_dc_ready <= `TRUE;
                         if_to_dc_PC <= PC;
                         if_to_dc_opType <= mc_to_if_inst[`OPTYPE_RANGE];

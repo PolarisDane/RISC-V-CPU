@@ -5,7 +5,8 @@ module Icache (
     input wire                      rst_in,
     input wire                      rdy_in,
 
-    input wire  [  `ADDR_TYPE]      if_to_ic_inst_addr,
+    input wire  [  `ADDR_TYPE]      if_to_ic_fetch_addr,
+    input wire  [  `ADDR_TYPE]      if_to_ic_update_addr,
     input wire  [  `INST_TYPE]      if_to_ic_inst,
     input wire                      if_to_ic_inst_valid,
 
@@ -19,11 +20,17 @@ reg                                 cacheValid[`ICACHE_SIZE - 1:0];
 
 wire [    `ICACHE_INDEX_RANGE]      index;
 wire [      `ICACHE_TAG_RANGE]      tag;
+wire [    `ICACHE_INDEX_RANGE]      fetch_index;
+wire [      `ICACHE_TAG_RANGE]      fetch_tag;
+wire [    `ICACHE_INDEX_RANGE]      update_index;
+wire [      `ICACHE_TAG_RANGE]      update_tag;
 
-assign index = if_to_ic_inst_addr[`ICACHE_INDEX_RANGE];
-assign tag = if_to_ic_inst_addr[`ICACHE_TAG_RANGE];
-assign ic_to_if_hit = (cacheTag[index][`ICACHE_INDEX_RANGE] == tag) && cacheValid[index];
-assign ic_to_if_inst = cacheData[tag];
+assign fetch_index = if_to_ic_fetch_addr[`ICACHE_INDEX_RANGE];
+assign fetch_tag = if_to_ic_fetch_addr[`ICACHE_TAG_RANGE];
+assign update_index = if_to_ic_update_addr[`ICACHE_INDEX_RANGE];
+assign update_tag = if_to_ic_update_addr[`ICACHE_TAG_RANGE];
+assign ic_to_if_hit = (cacheTag[fetch_index] == fetch_tag) && cacheValid[fetch_index];
+assign ic_to_if_inst = cacheData[fetch_index];
 
 integer i;
 
@@ -40,9 +47,9 @@ always @(posedge clk_in) begin
     end
     else begin
         if (if_to_ic_inst_valid) begin
-            cacheData[index] <= if_to_ic_inst;
-            cacheValid[index] <= 1'b1;
-            cacheTag[index] <= tag;
+            cacheData[update_index] <= if_to_ic_inst;
+            cacheValid[update_index] <= 1'b1;
+            cacheTag[update_index] <= update_tag;
         end
     end
 end
