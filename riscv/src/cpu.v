@@ -373,6 +373,7 @@ ReorderBuffer reorderbuffer(
     .clk_in(clk_in),
     .rst_in(rst_in),
     .rdy_in(rdy_in),
+    .lsb_full(lsb_full),
     .lsb_ready(lsb_ready),
     .lsb_result(lsb_result),
     .lsb_rob_index(lsb_result_rob_index),

@@ -46,20 +46,28 @@ reg [                 `DATA_TYPE]      rs_imm[`RS_SIZE-1:0];
 reg [                 `ADDR_TYPE]      rs_PC[`RS_SIZE-1:0];
 reg [               `OPENUM_TYPE]      rs_op[`RS_SIZE-1:0];
 reg [                   `OP_TYPE]      rs_opType[`RS_SIZE-1:0];
-reg                                    rs_valid[`RS_SIZE-1:0];
 reg                                    rs_busy[`RS_SIZE-1:0];
 
-assign rs_full = (vac_rs == `RS_SIZE);
-
-reg [                       31:0]      vac_rs;
-reg [                       31:0]      work_rs;   
+wire [            `RS_INDEX_TYPE]      vac_rs;
+wire [            `RS_INDEX_TYPE]      work_rs;   
 integer i;                
 
+assign rs_full = (vac_rs == `RS_SIZE);
+assign vac_rs = (!rs_busy[0]) ? 0 : (!rs_busy[1]) ? 1 : (!rs_busy[2]) ? 2 : (!rs_busy[3]) ? 3 :
+                (!rs_busy[4]) ? 4 : (!rs_busy[5]) ? 5 : (!rs_busy[6]) ? 6 : (!rs_busy[7]) ? 7 :
+                (!rs_busy[8]) ? 8 : (!rs_busy[9]) ? 9 : (!rs_busy[10]) ? 10 : (!rs_busy[11]) ? 11 :
+                (!rs_busy[12]) ? 12 : (!rs_busy[13]) ? 13 : (!rs_busy[14]) ? 14 : (!rs_busy[15]) ? 15 : `RS_SIZE;
+assign work_rs = (rs_busy[0] && !rs_rs1_depend[0] && !rs_rs2_depend[0]) ? 0 : (rs_busy[1] && !rs_rs1_depend[1] && !rs_rs2_depend[1]) ? 1 :
+                 (rs_busy[2] && !rs_rs1_depend[2] && !rs_rs2_depend[2]) ? 2 : (rs_busy[3] && !rs_rs1_depend[3] && !rs_rs2_depend[3]) ? 3 :
+                 (rs_busy[4] && !rs_rs1_depend[4] && !rs_rs2_depend[4]) ? 4 : (rs_busy[5] && !rs_rs1_depend[5] && !rs_rs2_depend[5]) ? 5 :
+                 (rs_busy[6] && !rs_rs1_depend[6] && !rs_rs2_depend[6]) ? 6 : (rs_busy[7] && !rs_rs1_depend[7] && !rs_rs2_depend[7]) ? 7 :
+                 (rs_busy[8] && !rs_rs1_depend[8] && !rs_rs2_depend[8]) ? 8 : (rs_busy[9] && !rs_rs1_depend[9] && !rs_rs2_depend[9]) ? 9 :
+                 (rs_busy[10] && !rs_rs1_depend[10] && !rs_rs2_depend[10]) ? 10 : (rs_busy[11] && !rs_rs1_depend[11] && !rs_rs2_depend[11]) ? 11 :
+                 (rs_busy[12] && !rs_rs1_depend[12] && !rs_rs2_depend[12]) ? 12 : (rs_busy[13] && !rs_rs1_depend[13] && !rs_rs2_depend[13]) ? 13 :
+                 (rs_busy[14] && !rs_rs1_depend[14] && !rs_rs2_depend[14]) ? 14 : (rs_busy[15] && !rs_rs1_depend[15] && !rs_rs2_depend[15]) ? 15 : `RS_SIZE;
+
 always @(*) begin
-    work_rs = `RS_SIZE;
-    vac_rs = `RS_SIZE;
     for (i = 0; i < `RS_SIZE; i = i + 1) begin
-        rs_valid[i] = `FALSE;
         if (alu_ready) begin
             if (rs_busy[i] && rs_rs1_depend[i] == alu_rob_index) begin
                 rs_rs1_val[i] = alu_result;
@@ -80,17 +88,7 @@ always @(*) begin
                 rs_rs2_depend[i] = 0;
             end
         end
-        if (rs_busy[i] && !rs_rs1_depend[i] && !rs_rs2_depend[i]) begin
-            rs_valid[i] = `TRUE;
-        end 
-        if (rs_valid[i] && work_rs == `RS_SIZE) begin
-            work_rs = i;
-        end
-        if (!rs_busy[i] && vac_rs == `RS_SIZE) begin
-            vac_rs = i;
-        end
     end
-    // $display("rs_full: %d, vac_rs: %d, work_rs: %d", rs_full, vac_rs, work_rs);
 end
 //modify to hardware search later
 
@@ -106,17 +104,7 @@ always @(posedge clk_in) begin
     end
     else begin
         rs_to_alu_ready <= `FALSE;
-        if (work_rs != `RS_SIZE) begin
-            rs_to_alu_ready <= `TRUE;
-            rs_to_alu_op <= rs_op[work_rs];
-            rs_to_alu_rs1 <= rs_rs1_val[work_rs];
-            rs_to_alu_rs2 <= rs_rs2_val[work_rs];
-            rs_to_alu_rob_index <= rs_rob_index[work_rs];
-            rs_to_alu_PC <= rs_PC[work_rs];
-            rs_to_alu_imm <= rs_imm[work_rs];
-            rs_busy[work_rs] <= `FALSE;
-        end
-        if (issue_rs_ready) begin
+        if (issue_rs_ready && vac_rs != `RS_SIZE) begin
             rs_rob_index[vac_rs] <= issue_rob_index;
             rs_rs1_val[vac_rs] <= issue_rs1_val;
             rs_rs2_val[vac_rs] <= issue_rs2_val;
@@ -126,8 +114,17 @@ always @(posedge clk_in) begin
             rs_PC[vac_rs] <= issue_PC;
             rs_op[vac_rs] <= issue_op;
             rs_opType[vac_rs] <= issue_opType;
-            rs_valid[vac_rs] <= `FALSE;
             rs_busy[vac_rs] <= `TRUE;
+        end
+        if (work_rs != `RS_SIZE) begin
+            rs_to_alu_ready <= `TRUE;
+            rs_to_alu_op <= rs_op[work_rs];
+            rs_to_alu_rs1 <= rs_rs1_val[work_rs];
+            rs_to_alu_rs2 <= rs_rs2_val[work_rs];
+            rs_to_alu_rob_index <= rs_rob_index[work_rs];
+            rs_to_alu_PC <= rs_PC[work_rs];
+            rs_to_alu_imm <= rs_imm[work_rs];
+            rs_busy[work_rs] <= `FALSE;
         end
     end
 end

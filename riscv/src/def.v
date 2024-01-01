@@ -15,6 +15,7 @@
 `define ADDR_TYPE 31:0
 `define INST_TYPE 31:0
 `define ROB_INDEX_TYPE 4:0
+`define RS_INDEX_TYPE 4:0
 `define LSB_INDEX_TYPE 3:0
 `define REG_INDEX_TYPE 4:0
 `define OP_TYPE 6:0

@@ -68,22 +68,24 @@ always @(posedge clk_in) begin
     else if (!rdy_in) begin
         ;
     end
-    else if (stall) begin
+    else if (clr_in) begin
         if_to_dc_ready <= `FALSE;
+        if_to_ic_inst_valid <= `FALSE;
+        status <= `STATUS_IDLE;
+        if_to_mc_ready <= `FALSE;
+        PC <= rob_to_if_alter_PC;
+        if_to_ic_fetch_addr <= rob_to_if_alter_PC;
     end
     else begin
         if_to_dc_ready <= `FALSE;
         if_to_ic_inst_valid <= `FALSE;
-        if (clr_in) begin
-            status <= `STATUS_IDLE;
-            if_to_mc_ready <= `FALSE;
-            PC <= rob_to_if_alter_PC;
-            if_to_ic_fetch_addr <= rob_to_if_alter_PC;
+        if (stall) begin
+            ;
         end
         else begin
             if_to_dc_pred_br <= pred;
             if (ic_to_if_hit) begin
-                $fdisplay(file_p, "clk_cnt: %d, PC: %x, inst: %x", clk_cnt, PC, ic_to_if_hit_inst);
+                // $fdisplay(file_p, "clk_cnt: %d, PC: %x, inst: %x", clk_cnt, PC, ic_to_if_hit_inst);
                 if_to_dc_ready <= `TRUE;
                 if_to_dc_PC <= PC;
                 if_to_dc_opType <= ic_to_if_hit_inst[`OPTYPE_RANGE];

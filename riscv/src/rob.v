@@ -5,6 +5,7 @@ module ReorderBuffer (
     input wire                      rst_in,
     input wire                      rdy_in,
     
+    input wire                      lsb_full,
     input wire                      lsb_ready,
     input wire [       `DATA_TYPE]  lsb_result,
     input wire [  `ROB_INDEX_TYPE]  lsb_rob_index,
@@ -109,7 +110,7 @@ always @(posedge clk_in) begin
             rob_brPC[alu_rob_index] <= alu_newPC;
             rob_true_br[alu_rob_index] <= alu_branch;
         end
-        if (issue_ready && !rob_full) begin
+        if (issue_ready && !rob_full && !lsb_full) begin
             rob_ready[nxt_tail] <= `FALSE;
             rob_rd[nxt_tail] <= issue_rd;
             rob_opType[nxt_tail] <= issue_opType;
