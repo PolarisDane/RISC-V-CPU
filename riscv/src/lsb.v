@@ -97,10 +97,10 @@ end
 integer file_p;
 integer clk_cnt;
 
-initial begin
-    file_p = $fopen("lsb.txt");
-    clk_cnt = 0;
-end
+// initial begin
+//     file_p = $fopen("lsb.txt");
+//     clk_cnt = 0;
+// end
 
 always @(posedge clk_in) begin
     clk_cnt <= clk_cnt + 1;
@@ -117,7 +117,6 @@ always @(posedge clk_in) begin
     else begin
         lsb_ready <= `FALSE;
         if (issue_lsb_ready && !lsb_full) begin
-            $fdisplay(file_p, "issue to lsb rob index: %d", issue_rob_index);
             lsb_rob_index[nxt_tail] <= issue_rob_index;
             lsb_rs1_val[nxt_tail] <= issue_rs1_val;
             lsb_rs2_val[nxt_tail] <= issue_rs2_val;
@@ -129,7 +128,6 @@ always @(posedge clk_in) begin
             lsb_opType[nxt_tail] <= issue_opType;
             tail <= nxt_tail;
         end
-        $fdisplay(file_p, "clk_cnt: %d, lsb_rs1_depend: %d, lsb_rs2_depend: %d, rob_to_lsb_commit_index: %d, lsb_rob_index: %d", clk_cnt, lsb_rs1_depend[nxt_head], lsb_rs2_depend[nxt_head], rob_to_lsb_commit_index, lsb_rob_index[nxt_head]);
         case (status)
             `STATUS_IDLE: begin
                 if (!lsb_empty && !lsb_rs1_depend[nxt_head] && !lsb_rs2_depend[nxt_head] && rob_to_lsb_ready && rob_to_lsb_commit_index == lsb_rob_index[nxt_head]) begin

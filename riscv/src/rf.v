@@ -61,8 +61,8 @@ always @(posedge clk_in) begin
     else begin
         if (rob_to_reg_commit) begin
             // $display("rob committing to regfile");
-            // $display("rob index %d committing to reg %d val %x", rob_to_reg_rob_index, rob_to_reg_index, rob_to_reg_val);
             if (rob_to_reg_index != 0) begin
+                // $fdisplay(file_p, "RF: %d\t<=\t, clk_cnt: %d", rob_to_reg_index, rob_to_reg_val, clk_cnt);
                 reg_val[rob_to_reg_index] <= rob_to_reg_val;
                 if (reg_depend[rob_to_reg_index] == rob_to_reg_rob_index) begin
                    reg_depend[rob_to_reg_index] <= 0;

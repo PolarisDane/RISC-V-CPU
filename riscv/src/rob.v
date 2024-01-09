@@ -12,6 +12,7 @@ module ReorderBuffer (
     output wire                     rob_to_lsb_ready,
     output wire [ `ROB_INDEX_TYPE]  rob_to_lsb_commit_index,
 
+    input wire                      rs_full,
     input wire                      alu_ready,
     input wire [       `DATA_TYPE]  alu_result,
     input wire [  `ROB_INDEX_TYPE]  alu_rob_index,
@@ -87,6 +88,9 @@ always @(posedge clk_in) begin
     clk_cnt <= clk_cnt + 1;
     // $fdisplay(file_p, "clk_cnt: %d", clk_cnt);
     if (rst_in || clr_in) begin
+        // if (clr_in) begin
+        //     $display("rob clr, clk_cnt: %d", clk_cnt);
+        // end
         head <= 0;
         tail <= 0;
         rob_to_pr_ready <= `FALSE;
@@ -110,7 +114,8 @@ always @(posedge clk_in) begin
             rob_brPC[alu_rob_index] <= alu_newPC;
             rob_true_br[alu_rob_index] <= alu_branch;
         end
-        if (issue_ready && !rob_full && !lsb_full) begin
+        if (issue_ready && !rob_full && !lsb_full && !rs_full) begin
+            // $display("ROB accept issue pc: %x, clk_cnt: %d", issue_PC, clk_cnt);
             rob_ready[nxt_tail] <= `FALSE;
             rob_rd[nxt_tail] <= issue_rd;
             rob_opType[nxt_tail] <= issue_opType;
@@ -138,7 +143,8 @@ always @(posedge clk_in) begin
                 rob_to_pr_PC <= rob_PC[nxt_head];
                 rob_to_pr_br_taken <= rob_true_br[nxt_head];
             end
-            // $fdisplay(file_p, "rob index %d committing PC %x", nxt_head, rob_PC[nxt_head]);
+            // if (rob_rd[nxt_head] != 0)
+            // $fdisplay(file_p, "rob index %d committing PC %x, value: %d, clk_cnt: %d", rob_rd[nxt_head], rob_PC[nxt_head], rob_result[nxt_head], clk_cnt);
             rob_to_reg_commit <= `TRUE;
             rob_to_reg_index <= rob_rd[nxt_head];
             rob_to_reg_rob_index <= nxt_head;

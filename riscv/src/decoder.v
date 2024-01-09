@@ -80,7 +80,7 @@ always @(*) begin
     else if (!rdy_in) begin
         ;
     end
-    else if (!if_to_dc_ready) begin
+    else if (!if_to_dc_ready || stall) begin
         issue_ready = `FALSE;
         issue_lsb_ready = `FALSE;
         issue_rs_ready = `FALSE;
