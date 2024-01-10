@@ -35,8 +35,6 @@ module MemController (
     output wire                     mc_to_if_valid
 );
 
-
-reg [                        31:0]  memResult;
 reg [                         1:0]  status;
 reg [                         2:0]  byte_index;
 assign mc_to_lsb_valid = (status == `STATUS_IDLE);
@@ -60,7 +58,7 @@ always @(posedge clk_in) begin
         mc_to_mem_wr <= 0;
         mc_to_if_addr <= 1;
     end
-    else if (!rdy_in) begin
+    else if (!rdy_in || io_buffer_full) begin
         ;
     end
     else begin

@@ -8,7 +8,7 @@
 `define LSB_SIZE 32'd16
 `define RS_SIZE 32'd16
 `define REG_SIZE 32'd32
-`define ICACHE_SIZE 32'd512
+`define ICACHE_SIZE 32'd256
 `define PREDICTOR_SIZE 32'd128
 
 `define DATA_TYPE 31:0
@@ -27,8 +27,8 @@
 `define RD_RANGE 11:7
 `define FUNC3_RANGE 14:12
 `define FUNC7_RANGE 31:25
-`define ICACHE_TAG_RANGE 31:11
-`define ICACHE_INDEX_RANGE 10:2
+`define ICACHE_TAG_RANGE 31:10
+`define ICACHE_INDEX_RANGE 9:2
 `define PREDICTOR_INDEX_RANGE 6:0
 `define OPTYPE_RANGE 6:0
 `define LEN_TYPE 2:0

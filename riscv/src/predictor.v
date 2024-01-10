@@ -13,10 +13,8 @@ module Predictor (
 );
 
 reg [                    1:0]       pr_state[`PREDICTOR_SIZE-1:0];
-wire [`PREDICTOR_INDEX_RANGE]       index;
 
 assign pr_to_if_prediction = pr_state[if_to_pr_PC[8:2]][1];
-assign index = rob_to_pr_PC[8:2];
 
 integer i;
 
@@ -31,18 +29,18 @@ always @(posedge clk_in) begin
     end
     else begin
         if (rob_to_pr_ready) begin
-            case (pr_state[index])
+            case (pr_state[rob_to_pr_PC[8:2]])
                 2'b00: begin
-                    pr_state[index] <= rob_to_pr_br_taken ? 2'b01 : 2'b00;
+                    pr_state[rob_to_pr_PC[8:2]] <= rob_to_pr_br_taken ? 2'b01 : 2'b00;
                 end
                 2'b01: begin
-                    pr_state[index] <= rob_to_pr_br_taken ? 2'b10 : 2'b00;
+                    pr_state[rob_to_pr_PC[8:2]] <= rob_to_pr_br_taken ? 2'b10 : 2'b00;
                 end
                 2'b10: begin
-                    pr_state[index] <= rob_to_pr_br_taken ? 2'b11 : 2'b01;
+                    pr_state[rob_to_pr_PC[8:2]] <= rob_to_pr_br_taken ? 2'b11 : 2'b01;
                 end
                 2'b11: begin
-                    pr_state[index] <= rob_to_pr_br_taken ? 2'b11 : 2'b10;
+                    pr_state[rob_to_pr_PC[8:2]] <= rob_to_pr_br_taken ? 2'b11 : 2'b10;
                 end
             endcase
         end

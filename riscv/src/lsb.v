@@ -19,7 +19,6 @@ module LoadStoreBuffer (
     input wire [  `ROB_INDEX_TYPE]  issue_rs2_depend,
     input wire [  `REG_INDEX_TYPE]  issue_rd,
     input wire [       `DATA_TYPE]  issue_imm,
-    input wire [       `ADDR_TYPE]  issue_PC,
 
     input wire                      rob_to_lsb_ready,
     input wire [  `ROB_INDEX_TYPE]  rob_to_lsb_commit_index,    
@@ -50,7 +49,6 @@ reg [                 `DATA_TYPE]      lsb_rs2_val[`LSB_SIZE-1:0];
 reg [            `ROB_INDEX_TYPE]      lsb_rs1_depend[`LSB_SIZE-1:0];
 reg [            `ROB_INDEX_TYPE]      lsb_rs2_depend[`LSB_SIZE-1:0];
 reg [                 `DATA_TYPE]      lsb_imm[`LSB_SIZE-1:0];
-reg [                 `ADDR_TYPE]      lsb_PC[`LSB_SIZE-1:0];
 reg [               `OPENUM_TYPE]      lsb_op[`LSB_SIZE-1:0];
 reg [                   `OP_TYPE]      lsb_opType[`LSB_SIZE-1:0];
 
@@ -69,33 +67,6 @@ assign nxt_tail = (tail + 1 == `LSB_SIZE) ? 1 : tail + 1;
 
 integer i;
 
-always @(*) begin
-    for (i = 0; i < `LSB_SIZE; i = i + 1) begin
-        if (alu_to_lsb_ready) begin
-            if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
-                lsb_rs1_val[i] = alu_to_lsb_result;
-                lsb_rs1_depend[i] = 0;
-            end
-            if (lsb_rs2_depend[i] == alu_to_lsb_rob_index) begin
-                lsb_rs2_val[i] = alu_to_lsb_result;
-                lsb_rs2_depend[i] = 0;
-            end
-        end
-        if (lsb_ready) begin
-            if (lsb_rs1_depend[i] == lsb_result_rob_index) begin
-                lsb_rs1_val[i] = lsb_result;
-                lsb_rs1_depend[i] = 0;
-            end
-            if (lsb_rs2_depend[i] == lsb_result_rob_index) begin
-                lsb_rs2_val[i] = lsb_result;
-                lsb_rs2_depend[i] = 0;
-            end
-        end
-    end
-end
-
-reg[31:0] cur_addr;
-reg[31:0] cur_val;
 integer file_p;
 integer clk_cnt;
 
@@ -105,7 +76,6 @@ integer clk_cnt;
 // end
 
 always @(posedge clk_in) begin
-    clk_cnt <= clk_cnt + 1;
     if (rst_in || clr_in) begin
         status <= `STATUS_IDLE;
         head <= 0;
@@ -125,10 +95,31 @@ always @(posedge clk_in) begin
             lsb_rs1_depend[nxt_tail] <= issue_rs1_depend;
             lsb_rs2_depend[nxt_tail] <= issue_rs2_depend;
             lsb_imm[nxt_tail] <= issue_imm;
-            lsb_PC[nxt_tail] <= issue_PC;
             lsb_op[nxt_tail] <= issue_op;
             lsb_opType[nxt_tail] <= issue_opType;
             tail <= nxt_tail;
+        end
+        for (i = 0; i < `LSB_SIZE; i = i + 1) begin
+            if (alu_to_lsb_ready) begin
+                if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
+                    lsb_rs1_val[i] <= alu_to_lsb_result;
+                    lsb_rs1_depend[i] <= 0;
+                end
+                if (lsb_rs2_depend[i] == alu_to_lsb_rob_index) begin
+                    lsb_rs2_val[i] <= alu_to_lsb_result;
+                    lsb_rs2_depend[i] <= 0;
+                end
+            end
+            if (lsb_ready) begin
+                if (lsb_rs1_depend[i] == lsb_result_rob_index) begin
+                    lsb_rs1_val[i] <= lsb_result;
+                    lsb_rs1_depend[i] <= 0;
+                end
+                if (lsb_rs2_depend[i] == lsb_result_rob_index) begin
+                    lsb_rs2_val[i] <= lsb_result;
+                    lsb_rs2_depend[i] <= 0;
+                end
+            end
         end
         case (status)
             `STATUS_IDLE: begin

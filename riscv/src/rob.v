@@ -22,7 +22,6 @@ module ReorderBuffer (
     input wire                      issue_ready,
     input wire [         `OP_TYPE]  issue_opType,
     input wire [  `REG_INDEX_TYPE]  issue_rd,
-    input wire [       `DATA_TYPE]  issue_imm,
     input wire [       `ADDR_TYPE]  issue_PC,
     input wire                      issue_pred_br,
 
@@ -85,7 +84,7 @@ integer clk_cnt;
 
 always @(posedge clk_in) begin
     // $display("rob head %d tail %d", head, tail);
-    clk_cnt <= clk_cnt + 1;
+    // clk_cnt <= clk_cnt + 1;
     // $fdisplay(file_p, "clk_cnt: %d", clk_cnt);
     if (rst_in || clr_in) begin
         // if (clr_in) begin
