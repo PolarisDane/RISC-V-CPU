@@ -53,16 +53,17 @@ always @(posedge clk_in) begin
     else if (!rdy_in) begin
         ;
     end
-    else if (clr_in) begin
-        for (i = 0; i < `REG_SIZE; i = i + 1) begin
-            reg_depend[i] <= 0;
-        end
-    end
     else begin
+        if (clr_in) begin
+            for (i = 0; i < `REG_SIZE; i = i + 1) begin
+                reg_depend[i] <= 0;
+            end
+        end
         if (rob_to_reg_commit) begin
             // $display("rob committing to regfile");
             if (rob_to_reg_index != 0) begin
-                // $fdisplay(file_p, "RF: %d\t<=\t, clk_cnt: %d", rob_to_reg_index, rob_to_reg_val, clk_cnt);
+                // $fdisplay(file_p, "RF: %d\t<=\t%d", rob_to_reg_index, rob_to_reg_val);
+                // $fdisplay(file_p, "RF: %d\t<=\t%d, clk_cnt: %d", rob_to_reg_index, rob_to_reg_val, clk_cnt);
                 reg_val[rob_to_reg_index] <= rob_to_reg_val;
                 if (reg_depend[rob_to_reg_index] == rob_to_reg_rob_index) begin
                    reg_depend[rob_to_reg_index] <= 0;

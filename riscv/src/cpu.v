@@ -113,6 +113,7 @@ wire                                stall;
 wire [                 `INST_TYPE]  mc_to_if_inst;
 wire                                mc_to_if_ready;
 wire                                mc_to_if_valid;
+wire [                 `ADDR_TYPE]  mc_to_if_addr;
 wire [                 `ADDR_TYPE]  if_to_mc_PC;
 wire                                if_to_mc_ready;
 
@@ -174,6 +175,7 @@ InstructionFetcher instructionfetcher(
     .clr_in(clr_in),
     .mc_to_if_valid(mc_to_if_valid),
     .mc_to_if_inst(mc_to_if_inst),
+    .mc_to_if_addr(mc_to_if_addr),
     .mc_to_if_ready(mc_to_if_ready),
     .if_to_mc_PC(if_to_mc_PC),
     .if_to_mc_ready(if_to_mc_ready),
@@ -221,6 +223,7 @@ MemController memcontroller(
     .if_to_mc_ready(if_to_mc_ready),
     .mc_to_if_inst(mc_to_if_inst),
     .mc_to_if_ready(mc_to_if_ready),
+    .mc_to_if_addr(mc_to_if_addr),
     .lsb_to_mc_ready(lsb_to_mc_ready),
     .lsb_to_mc_len(lsb_to_mc_len),
     .lsb_to_mc_opType(lsb_to_mc_opType),

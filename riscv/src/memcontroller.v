@@ -21,6 +21,7 @@ module MemController (
     input wire                      if_to_mc_ready,
     output reg [       `DATA_TYPE]  mc_to_if_inst,
     output reg                      mc_to_if_ready,
+    output reg [       `ADDR_TYPE]  mc_to_if_addr,
 
     input wire                      lsb_to_mc_ready,
     input wire [        `LEN_TYPE]  lsb_to_mc_len,
@@ -34,11 +35,18 @@ module MemController (
     output wire                     mc_to_if_valid
 );
 
+
 reg [                        31:0]  memResult;
 reg [                         1:0]  status;
 reg [                         2:0]  byte_index;
 assign mc_to_lsb_valid = (status == `STATUS_IDLE);
 assign mc_to_if_valid = (status == `STATUS_IDLE) && !lsb_to_mc_ready;
+
+integer file_p;
+
+// initial begin
+//     file_p = $fopen("mc.txt");
+// end
 
 always @(posedge clk_in) begin
     if (rst_in) begin
@@ -50,6 +58,7 @@ always @(posedge clk_in) begin
         mc_to_mem_dout <= 0;
         mc_to_mem_addr <= 0;
         mc_to_mem_wr <= 0;
+        mc_to_if_addr <= 1;
     end
     else if (!rdy_in) begin
         ;
@@ -78,6 +87,7 @@ always @(posedge clk_in) begin
                 end
             end
             else if (if_to_mc_ready) begin
+                mc_to_if_addr <= if_to_mc_PC;
                 mc_to_mem_addr <= if_to_mc_PC;
                 mc_to_mem_wr <= 0;
                 status <= `STATUS_IF;
@@ -149,6 +159,7 @@ always @(posedge clk_in) begin
         else if (status == `STATUS_IF) begin
             if (clr_in) begin
                 status <= `STATUS_IDLE;
+                mc_to_if_addr <= 1;
             end
             else begin
                 case (byte_index)

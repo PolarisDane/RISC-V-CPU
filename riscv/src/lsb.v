@@ -94,6 +94,8 @@ always @(*) begin
     end
 end
 
+reg[31:0] cur_addr;
+reg[31:0] cur_val;
 integer file_p;
 integer clk_cnt;
 
@@ -189,10 +191,12 @@ always @(posedge clk_in) begin
                             lsb_result <= {{16{mc_to_lsb_result[15]}}, mc_to_lsb_result[15:0]};
                         end
                     endcase
+                    // $fdisplay(file_p, "Memory read:%d", lsb_result);
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
                 end
                 if (mc_to_lsb_st_done) begin
+                    // $fdisplay(file_p, "Memory write:%d to %d", lsb_to_mc_data, lsb_to_mc_addr);
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
                 end

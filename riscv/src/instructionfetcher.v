@@ -12,6 +12,7 @@ module InstructionFetcher (
     input wire                      mc_to_if_valid,
     input wire [       `INST_TYPE]  mc_to_if_inst,
     input wire                      mc_to_if_ready,
+    input wire [       `ADDR_TYPE]  mc_to_if_addr,
     output reg [       `ADDR_TYPE]  if_to_mc_PC,
     output reg                      if_to_mc_ready,
 
@@ -86,7 +87,6 @@ always @(posedge clk_in) begin
             if_to_dc_ready <= `FALSE;
             if_to_dc_pred_br <= pred;
             if (ic_to_if_hit) begin
-                // $display("clk_cnt: %d, PC: %x, inst: %x", clk_cnt, PC, ic_to_if_hit_inst);
                 if_to_dc_ready <= `TRUE;
                 if_to_dc_PC <= PC;
                 if_to_dc_opType <= ic_to_if_hit_inst[`OPTYPE_RANGE];
@@ -104,7 +104,7 @@ always @(posedge clk_in) begin
                     if (mc_to_if_valid) begin
                         if_to_mc_ready <= `FALSE;
                     end
-                    if (mc_to_if_ready) begin
+                    if (mc_to_if_ready && mc_to_if_addr == PC) begin
                         if_to_ic_update_addr <= PC;
                         if_to_ic_inst <= mc_to_if_inst;
                         if_to_ic_inst_valid <= `TRUE;
