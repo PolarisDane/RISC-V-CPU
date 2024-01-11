@@ -95,14 +95,24 @@ always @(posedge clk_in) begin
         rob_to_pr_ready <= `FALSE;
         rob_to_reg_commit <= `FALSE;
         clr_in <= 0;
+
+        // clearing everything in the buffer
+        for (i = 0; i < `ROB_SIZE; i = i + 1) begin
+            rob_ready[i] <= `FALSE;
+            rob_rd[i] <= 0;
+            rob_opType[i] <= 0;
+            rob_PC[i] <= 0;
+            rob_brPC[i] <= 0;
+            rob_result[i] <= 0;
+            rob_pred_br[i] <= 0;
+            rob_true_br[i] <= 0;
+        end
     end
     else if (!rdy_in) begin
         ;
     end
     else begin
         // $fdisplay(file_p, "Issue PC: %x", issue_PC);
-        rob_to_pr_ready <= `FALSE;
-        rob_to_reg_commit <= `FALSE;
         if (lsb_ready) begin
             rob_ready[lsb_rob_index] <= `TRUE;//must be head of rob
             rob_result[lsb_rob_index] <= lsb_result;
@@ -142,12 +152,19 @@ always @(posedge clk_in) begin
                 rob_to_pr_PC <= rob_PC[nxt_head];
                 rob_to_pr_br_taken <= rob_true_br[nxt_head];
             end
+            else begin
+                rob_to_pr_ready <= `FALSE;
+            end
             // if (rob_rd[nxt_head] != 0)
             // $fdisplay(file_p, "rob index %d committing PC %x, value: %d, clk_cnt: %d", rob_rd[nxt_head], rob_PC[nxt_head], rob_result[nxt_head], clk_cnt);
             rob_to_reg_commit <= `TRUE;
             rob_to_reg_index <= rob_rd[nxt_head];
             rob_to_reg_rob_index <= nxt_head;
             rob_to_reg_val <= rob_result[nxt_head];
+        end
+        else begin
+            rob_to_pr_ready <= `FALSE;
+            rob_to_reg_commit <= `FALSE;
         end
     end
 end

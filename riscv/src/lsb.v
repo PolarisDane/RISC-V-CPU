@@ -17,7 +17,6 @@ module LoadStoreBuffer (
     input wire [  `ROB_INDEX_TYPE]  issue_rs1_depend,
     input wire [       `DATA_TYPE]  issue_rs2_val,
     input wire [  `ROB_INDEX_TYPE]  issue_rs2_depend,
-    input wire [  `REG_INDEX_TYPE]  issue_rd,
     input wire [       `DATA_TYPE]  issue_imm,
 
     input wire                      rob_to_lsb_ready,
@@ -76,18 +75,29 @@ integer clk_cnt;
 // end
 
 always @(posedge clk_in) begin
+    clk_cnt <= clk_cnt + 1;
     if (rst_in || clr_in) begin
         status <= `STATUS_IDLE;
         head <= 0;
         tail <= 0;
         lsb_to_mc_ready <= `FALSE;
         lsb_ready <= `FALSE;
+        // clearing every entry in the buffer
+        for (i = 0; i < `LSB_SIZE; i = i + 1) begin
+            lsb_rob_index[i] <= 0;
+            lsb_rs1_val[i] <= 0;
+            lsb_rs2_val[i] <= 0;
+            lsb_rs1_depend[i] <= 0;
+            lsb_rs2_depend[i] <= 0;
+            lsb_imm[i] <= 0;
+            lsb_op[i] <= 0;
+            lsb_opType[i] <= 0;
+        end
     end
     else if (!rdy_in) begin
         ;
     end 
     else begin
-        lsb_ready <= `FALSE;
         if (issue_lsb_ready && !lsb_full) begin
             lsb_rob_index[nxt_tail] <= issue_rob_index;
             lsb_rs1_val[nxt_tail] <= issue_rs1_val;
@@ -99,8 +109,30 @@ always @(posedge clk_in) begin
             lsb_opType[nxt_tail] <= issue_opType;
             tail <= nxt_tail;
         end
-        for (i = 0; i < `LSB_SIZE; i = i + 1) begin
-            if (alu_to_lsb_ready) begin
+        // for (i = 0; i < `LSB_SIZE; i = i + 1) begin
+        //     if (alu_to_lsb_ready) begin
+        //         if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
+        //             lsb_rs1_val[i] <= alu_to_lsb_result;
+        //             lsb_rs1_depend[i] <= 0;
+        //         end
+        //         if (lsb_rs2_depend[i] == alu_to_lsb_rob_index) begin
+        //             lsb_rs2_val[i] <= alu_to_lsb_result;
+        //             lsb_rs2_depend[i] <= 0;
+        //         end
+        //     end
+        //     if (lsb_ready) begin
+        //         if (lsb_rs1_depend[i] == lsb_result_rob_index) begin
+        //             lsb_rs1_val[i] <= lsb_result;
+        //             lsb_rs1_depend[i] <= 0;
+        //         end
+        //         if (lsb_rs2_depend[i] == lsb_result_rob_index) begin
+        //             lsb_rs2_val[i] <= lsb_result;
+        //             lsb_rs2_depend[i] <= 0;
+        //         end
+        //     end
+        // end
+        if (alu_to_lsb_ready) begin
+            for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 if (lsb_rs1_depend[i] == alu_to_lsb_rob_index) begin
                     lsb_rs1_val[i] <= alu_to_lsb_result;
                     lsb_rs1_depend[i] <= 0;
@@ -110,7 +142,9 @@ always @(posedge clk_in) begin
                     lsb_rs2_depend[i] <= 0;
                 end
             end
-            if (lsb_ready) begin
+        end
+        if (lsb_ready) begin
+            for (i = 0; i < `LSB_SIZE; i = i + 1) begin
                 if (lsb_rs1_depend[i] == lsb_result_rob_index) begin
                     lsb_rs1_val[i] <= lsb_result;
                     lsb_rs1_depend[i] <= 0;
@@ -123,6 +157,7 @@ always @(posedge clk_in) begin
         end
         case (status)
             `STATUS_IDLE: begin
+                lsb_ready <= `FALSE;
                 if (!lsb_empty && !lsb_rs1_depend[nxt_head] && !lsb_rs2_depend[nxt_head] && rob_to_lsb_ready && rob_to_lsb_commit_index == lsb_rob_index[nxt_head]) begin
                     head <= nxt_head;
                     lsb_to_mc_ready <= `TRUE;
@@ -186,10 +221,13 @@ always @(posedge clk_in) begin
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
                 end
-                if (mc_to_lsb_st_done) begin
+                else if (mc_to_lsb_st_done) begin
                     // $fdisplay(file_p, "Memory write:%d to %d", lsb_to_mc_data, lsb_to_mc_addr);
                     lsb_ready <= `TRUE;
                     status <= `STATUS_IDLE;
+                end
+                else begin
+                    lsb_ready <= `FALSE;
                 end
             end
         endcase

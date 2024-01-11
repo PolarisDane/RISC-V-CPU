@@ -16,7 +16,6 @@ module InstructionFetcher (
     output reg [       `ADDR_TYPE]  if_to_mc_PC,
     output reg                      if_to_mc_ready,
 
-    input wire                      rob_full,
     input wire                      stall,
     output reg                      if_to_dc_ready,
     output reg [         `OP_TYPE]  if_to_dc_opType,
@@ -58,7 +57,7 @@ integer clk_cnt;
 // end
 
 always @(posedge clk_in) begin
-    clk_cnt <= clk_cnt + 1;
+    // clk_cnt <= clk_cnt + 1;
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
@@ -79,12 +78,10 @@ always @(posedge clk_in) begin
         if_to_ic_fetch_addr <= rob_to_if_alter_PC;
     end
     else begin
-        if_to_ic_inst_valid <= `FALSE;
         if (stall) begin
             ;
         end
         else begin
-            if_to_dc_ready <= `FALSE;
             if_to_dc_pred_br <= pred;
             if (ic_to_if_hit) begin
                 if_to_dc_ready <= `TRUE;
@@ -96,8 +93,10 @@ always @(posedge clk_in) begin
             end
             else begin
                 if (status == `STATUS_IDLE) begin
+                    if_to_dc_ready <= `FALSE;
                     if_to_mc_ready <= `TRUE;
                     if_to_mc_PC <= PC;
+                    if_to_ic_inst_valid <= `FALSE;
                     status <= `STATUS_BUSY;
                 end
                 else begin
@@ -115,6 +114,9 @@ always @(posedge clk_in) begin
                         if_to_dc_inst <= mc_to_if_inst;
                         PC <= nxtPC;
                         status <= `STATUS_IDLE;
+                    end
+                    else begin
+                        if_to_ic_inst_valid <= `FALSE;
                     end
                 end
             end

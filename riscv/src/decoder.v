@@ -71,7 +71,7 @@ integer clk_cnt;
 // end
 
 always @(*) begin
-    clk_cnt = clk_cnt + 1;
+    // clk_cnt = clk_cnt + 1;
     if (rst_in || clr_in) begin
         issue_ready = `FALSE;
         issue_lsb_ready = `FALSE;

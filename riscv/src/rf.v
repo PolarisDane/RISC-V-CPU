@@ -41,7 +41,7 @@ assign reg_to_dc_rs2_val = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_de
 assign reg_to_dc_rs2_depend = (rob_to_reg_commit && (rob_to_reg_rob_index == reg_depend[dc_to_reg_rs2_pos])) ? 0 : reg_depend[dc_to_reg_rs2_pos];
 
 always @(posedge clk_in) begin
-    clk_cnt <= clk_cnt + 1;
+    // clk_cnt <= clk_cnt + 1;
     // $fdisplay(file_p, "clk: %d", clk_cnt);
     // $fdisplay(file_p, "reg t0: %x", reg_val[5]);
     if (rst_in) begin
@@ -66,7 +66,12 @@ always @(posedge clk_in) begin
                 // $fdisplay(file_p, "RF: %d\t<=\t%d, clk_cnt: %d", rob_to_reg_index, rob_to_reg_val, clk_cnt);
                 reg_val[rob_to_reg_index] <= rob_to_reg_val;
                 if (reg_depend[rob_to_reg_index] == rob_to_reg_rob_index) begin
-                   reg_depend[rob_to_reg_index] <= 0;
+                    if (issue_ready && issue_rd == rob_to_reg_index) begin
+                        ;
+                    end
+                    else begin
+                        reg_depend[rob_to_reg_index] <= 0;
+                    end
                 end
             end//x0 can't be modified
         end
