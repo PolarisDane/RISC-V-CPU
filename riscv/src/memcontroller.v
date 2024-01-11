@@ -58,7 +58,7 @@ always @(posedge clk_in) begin
         mc_to_mem_wr <= 0;
         mc_to_if_addr <= 1;
     end
-    else if (!rdy_in || io_buffer_full) begin
+    else if (!rdy_in) begin
         ;
     end
     else begin
