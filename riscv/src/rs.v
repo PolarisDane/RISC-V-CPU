@@ -83,8 +83,8 @@ always @(posedge clk_in) begin
         ;
     end
     else begin
-        for (i = 0; i < `RS_SIZE; i = i + 1) begin
-            if (alu_ready) begin
+        if (alu_ready) begin
+            for (i = 0; i < `RS_SIZE; i = i + 1) begin
                 if (rs_busy[i] && rs_rs1_depend[i] == alu_rob_index) begin
                     rs_rs1_val[i] <= alu_result;
                     rs_rs1_depend[i] <= 0;
@@ -94,7 +94,9 @@ always @(posedge clk_in) begin
                     rs_rs2_depend[i] <= 0;
                 end
             end
-            if (lsb_ready) begin
+        end
+        if (lsb_ready) begin
+            for (i = 0; i < `RS_SIZE; i = i + 1) begin
                 if (rs_busy[i] && rs_rs1_depend[i] == lsb_rob_index) begin
                     rs_rs1_val[i] <= lsb_result;
                     rs_rs1_depend[i] <= 0;

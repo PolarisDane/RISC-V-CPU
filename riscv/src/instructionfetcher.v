@@ -9,7 +9,6 @@ module InstructionFetcher (
     input wire                      rdy_in,
     input wire                      clr_in,
 
-    input wire                      mc_to_if_valid,
     input wire [       `INST_TYPE]  mc_to_if_inst,
     input wire                      mc_to_if_ready,
     input wire [       `ADDR_TYPE]  mc_to_if_addr,
@@ -100,10 +99,8 @@ always @(posedge clk_in) begin
                     status <= `STATUS_BUSY;
                 end
                 else begin
-                    if (mc_to_if_valid) begin
+                    if (mc_to_if_ready) begin
                         if_to_mc_ready <= `FALSE;
-                    end
-                    if (mc_to_if_ready && mc_to_if_addr == PC) begin
                         if_to_ic_update_addr <= PC;
                         if_to_ic_inst <= mc_to_if_inst;
                         if_to_ic_inst_valid <= `TRUE;

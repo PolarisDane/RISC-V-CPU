@@ -145,7 +145,8 @@ always @(posedge clk_in) begin
                 clr_in <= 1;
                 rob_to_if_alter_PC <= rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head];
                 // $fdisplay(file_p, "branch fail");
-                // $fdisplay(file_p, "PC changed to %x", rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head]);
+                // $display("rob_PC[nxt_head] = %d, rob_brPC[nxt_head] = %d", rob_PC[nxt_head], rob_brPC[nxt_head]);
+                // $display("PC changed to %x", rob_pred_br[nxt_head] ? rob_PC[nxt_head] + 4 : rob_brPC[nxt_head]);
             end//maybe JALR
             if (rob_opType[nxt_head] == `OP_BR) begin
                 rob_to_pr_ready <= `TRUE;

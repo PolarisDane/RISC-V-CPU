@@ -112,8 +112,6 @@ wire                                stall;
 //if with mc
 wire [                 `INST_TYPE]  mc_to_if_inst;
 wire                                mc_to_if_ready;
-wire                                mc_to_if_valid;
-wire [                 `ADDR_TYPE]  mc_to_if_addr;
 wire [                 `ADDR_TYPE]  if_to_mc_PC;
 wire                                if_to_mc_ready;
 
@@ -138,7 +136,6 @@ wire [                 `ADDR_TYPE]  lsb_to_mc_addr;
 wire                                mc_to_lsb_ld_done;  
 wire                                mc_to_lsb_st_done;
 wire [                 `DATA_TYPE]  mc_to_lsb_result;
-wire                                mc_to_lsb_valid;
 
 //alu with rs
 wire                                rs_to_alu_ready;
@@ -173,9 +170,7 @@ InstructionFetcher instructionfetcher(
     .rst_in(rst_in),
     .rdy_in(rdy_in),
     .clr_in(clr_in),
-    .mc_to_if_valid(mc_to_if_valid),
     .mc_to_if_inst(mc_to_if_inst),
-    .mc_to_if_addr(mc_to_if_addr),
     .mc_to_if_ready(mc_to_if_ready),
     .if_to_mc_PC(if_to_mc_PC),
     .if_to_mc_ready(if_to_mc_ready),
@@ -222,7 +217,6 @@ MemController memcontroller(
     .if_to_mc_ready(if_to_mc_ready),
     .mc_to_if_inst(mc_to_if_inst),
     .mc_to_if_ready(mc_to_if_ready),
-    .mc_to_if_addr(mc_to_if_addr),
     .lsb_to_mc_ready(lsb_to_mc_ready),
     .lsb_to_mc_len(lsb_to_mc_len),
     .lsb_to_mc_opType(lsb_to_mc_opType),
@@ -230,9 +224,7 @@ MemController memcontroller(
     .lsb_to_mc_addr(lsb_to_mc_addr),
     .mc_to_lsb_ld_done(mc_to_lsb_ld_done),
     .mc_to_lsb_st_done(mc_to_lsb_st_done),
-    .mc_to_lsb_result(mc_to_lsb_result),
-    .mc_to_if_valid(mc_to_if_valid),
-    .mc_to_lsb_valid(mc_to_lsb_valid)
+    .mc_to_lsb_result(mc_to_lsb_result)
 );
 
 LoadStoreBuffer lsb(
@@ -257,7 +249,6 @@ LoadStoreBuffer lsb(
     .mc_to_lsb_ld_done(mc_to_lsb_ld_done),
     .mc_to_lsb_st_done(mc_to_lsb_st_done),
     .mc_to_lsb_result(mc_to_lsb_result),
-    .mc_to_lsb_valid(mc_to_lsb_valid),
     .lsb_to_mc_ready(lsb_to_mc_ready),
     .lsb_to_mc_len(lsb_to_mc_len),
     .lsb_to_mc_opType(lsb_to_mc_opType),

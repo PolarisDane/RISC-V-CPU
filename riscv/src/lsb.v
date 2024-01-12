@@ -29,7 +29,6 @@ module LoadStoreBuffer (
     input wire                      mc_to_lsb_ld_done,
     input wire                      mc_to_lsb_st_done,
     input wire [  `DATA_TYPE]       mc_to_lsb_result,
-    input wire                      mc_to_lsb_valid,
     output reg                      lsb_to_mc_ready,
     output reg [   `LEN_TYPE]       lsb_to_mc_len,
     output reg [    `OP_TYPE]       lsb_to_mc_opType,
@@ -196,9 +195,6 @@ always @(posedge clk_in) begin
                 end
             end
             `STATUS_BUSY: begin
-                if (mc_to_lsb_valid) begin
-                    lsb_to_mc_ready <= `FALSE;
-                end
                 if (mc_to_lsb_ld_done) begin
                     case (head_op)
                         `OPENUM_LB: begin
@@ -219,11 +215,13 @@ always @(posedge clk_in) begin
                     endcase
                     // $fdisplay(file_p, "Memory read:%d", lsb_result);
                     lsb_ready <= `TRUE;
+                    lsb_to_mc_ready <= `FALSE;
                     status <= `STATUS_IDLE;
                 end
                 else if (mc_to_lsb_st_done) begin
                     // $fdisplay(file_p, "Memory write:%d to %d", lsb_to_mc_data, lsb_to_mc_addr);
                     lsb_ready <= `TRUE;
+                    lsb_to_mc_ready <= `FALSE;
                     status <= `STATUS_IDLE;
                 end
                 else begin
