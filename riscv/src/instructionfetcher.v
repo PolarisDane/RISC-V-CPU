@@ -11,7 +11,6 @@ module InstructionFetcher (
 
     input wire [       `INST_TYPE]  mc_to_if_inst,
     input wire                      mc_to_if_ready,
-    input wire [       `ADDR_TYPE]  mc_to_if_addr,
     output reg [       `ADDR_TYPE]  if_to_mc_PC,
     output reg                      if_to_mc_ready,
 

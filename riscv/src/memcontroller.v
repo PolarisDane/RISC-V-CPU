@@ -72,8 +72,6 @@ always @(posedge clk_in) begin
                 status <= `STATUS_LOAD;
             end
             else if (lsb_to_mc_ready && lsb_to_mc_opType == `OP_ST) begin
-                mc_to_mem_dout <= lsb_to_mc_data[7:0];
-                mc_to_mem_addr <= lsb_to_mc_addr;
                 mc_to_mem_wr <= 1;
                 status <= `STATUS_STORE;
             end
@@ -85,65 +83,63 @@ always @(posedge clk_in) begin
         end
         else if (status == `STATUS_LOAD) begin
             case (byte_index)
-                3'b000: begin
-                    byte_index <= 3'b001;
-                end
                 3'b001: begin
                     mc_to_lsb_result[7:0] <= mem_to_mc_din;
-                    byte_index <= 3'b010;
-                    if (lsb_to_mc_len == 3'b001) begin
-                        mc_to_lsb_result[31:8] <= 24'b0;
-                        mc_to_lsb_ld_done <= `TRUE;
-                        status <= `STATUS_STALL;
-                    end
                 end
                 3'b010: begin
                     mc_to_lsb_result[15:8] <= mem_to_mc_din;
-                    byte_index <= 3'b011;
-                    if (lsb_to_mc_len == 3'b010) begin
-                        mc_to_lsb_result[31:16] <= 16'b0;
-                        mc_to_lsb_ld_done <= `TRUE;
-                        status <= `STATUS_STALL;
-                    end
                 end
                 3'b011: begin
                     mc_to_lsb_result[23:16] <= mem_to_mc_din;
-                    byte_index <= 3'b100;
                 end
                 3'b100: begin
                     mc_to_lsb_result[31:24] <= mem_to_mc_din;
-                    mc_to_lsb_ld_done <= `TRUE;
-                    status <= `STATUS_STALL;
                 end
             endcase
-            mc_to_mem_addr <= mc_to_mem_addr + 1;
-        end
-        else if (status == `STATUS_STORE) begin
-            if (lsb_to_mc_len == 3'b001) begin
-                mc_to_lsb_st_done <= `TRUE;
+            if (byte_index == lsb_to_mc_len) begin
+                if (lsb_to_mc_len == 3'b001) begin
+                    mc_to_lsb_result[31:8] <= 24'b0;
+                end
+                else if (lsb_to_mc_len == 3'b010) begin
+                    mc_to_lsb_result[31:16] <= 16'b0;
+                end
+                mc_to_mem_addr <= 0;
+                mc_to_lsb_ld_done <= `TRUE;
                 status <= `STATUS_STALL;
             end
             else begin
+                byte_index <= byte_index + 1;
                 mc_to_mem_addr <= mc_to_mem_addr + 1;
+            end
+        end
+        else if (status == `STATUS_STORE) begin
+            if (lsb_to_mc_len == byte_index) begin
+                mc_to_lsb_st_done <= `TRUE;
+                mc_to_mem_addr <= 0;
+                status <= `STATUS_STALL;
+            end
+            else begin
                 case (byte_index) 
                     3'b000: begin
-                        mc_to_mem_dout <= lsb_to_mc_data[15:8];
-                        byte_index <= 3'b001;
-                        if (lsb_to_mc_len == 3'b010) begin
-                            mc_to_lsb_st_done <= `TRUE;
-                            status <= `STATUS_STALL;
-                        end
+                        mc_to_mem_dout <= lsb_to_mc_data[7:0];
                     end
                     3'b001: begin
-                        mc_to_mem_dout <= lsb_to_mc_data[23:16];
-                        byte_index <= 3'b010;
+                        mc_to_mem_dout <= lsb_to_mc_data[15:8];
                     end
                     3'b010: begin
+                        mc_to_mem_dout <= lsb_to_mc_data[23:16];
+                    end
+                    3'b011: begin
                         mc_to_mem_dout <= lsb_to_mc_data[31:24];
-                        mc_to_lsb_st_done <= `TRUE;
-                        status <= `STATUS_STALL;
                     end
                 endcase
+                byte_index <= byte_index + 1;
+                if (byte_index == 3'b000) begin
+                    mc_to_mem_addr <= lsb_to_mc_addr;
+                end
+                else begin
+                    mc_to_mem_addr <= mc_to_mem_addr + 1;
+                end
             end
         end
         else if (status == `STATUS_IF) begin
@@ -152,28 +148,28 @@ always @(posedge clk_in) begin
             end
             else begin
                 case (byte_index)
-                    3'b000: begin
-                        byte_index <= 3'b001;
-                    end
                     3'b001: begin
                         mc_to_if_inst[7:0] <= mem_to_mc_din;
-                        byte_index <= 3'b010;
                     end
                     3'b010: begin
                         mc_to_if_inst[15:8] <= mem_to_mc_din;
-                        byte_index <= 3'b011;
                     end
                     3'b011: begin
                         mc_to_if_inst[23:16] <= mem_to_mc_din;
-                        byte_index <= 3'b100;
                     end
                     3'b100: begin
                         mc_to_if_inst[31:24] <= mem_to_mc_din;
-                        status <= `STATUS_STALL;
-                        mc_to_if_ready <= `TRUE;
                     end
                 endcase
-                mc_to_mem_addr <= mc_to_mem_addr + 1;
+                if (byte_index == 4) begin
+                    mc_to_mem_addr <= 0;
+                    status <= `STATUS_STALL;
+                    mc_to_if_ready <= `TRUE;
+                end
+                else begin
+                    byte_index <= byte_index + 1;
+                    mc_to_mem_addr <= mc_to_mem_addr + 1;
+                end
             end
         end
         else begin

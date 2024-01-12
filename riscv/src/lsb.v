@@ -167,28 +167,28 @@ always @(posedge clk_in) begin
                     head_op <= lsb_op[nxt_head];
                     case (lsb_op[nxt_head])
                         `OPENUM_LB: begin
-                            lsb_to_mc_len <= 2'b01;
+                            lsb_to_mc_len <= 3'b001;
                         end
                         `OPENUM_LH: begin
-                            lsb_to_mc_len <= 2'b10;
+                            lsb_to_mc_len <= 3'b010;
                         end
                         `OPENUM_LW: begin
-                            lsb_to_mc_len <= 2'b11;
+                            lsb_to_mc_len <= 3'b100;
                         end
                         `OPENUM_LBU: begin
-                            lsb_to_mc_len <= 2'b01;
+                            lsb_to_mc_len <= 3'b001;
                         end
                         `OPENUM_LHU: begin
-                            lsb_to_mc_len <= 2'b10;
+                            lsb_to_mc_len <= 3'b010;
                         end
                         `OPENUM_SB: begin
-                            lsb_to_mc_len <= 2'b01;
+                            lsb_to_mc_len <= 3'b001;
                         end
                         `OPENUM_SH: begin
-                            lsb_to_mc_len <= 2'b10;
+                            lsb_to_mc_len <= 3'b010;
                         end
                         `OPENUM_SW: begin
-                            lsb_to_mc_len <= 2'b11;
+                            lsb_to_mc_len <= 3'b100;
                         end
                     endcase
                     status <= `STATUS_BUSY;

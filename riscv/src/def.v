@@ -21,6 +21,7 @@
 `define OP_TYPE 6:0
 `define OPENUM_TYPE 5:0
 `define STATUS_TYPE 1:0
+`define LEN_TYPE 3:0
 
 `define RS1_RANGE 19:15
 `define RS2_RANGE 24:20
@@ -31,7 +32,6 @@
 `define ICACHE_INDEX_RANGE 9:2
 `define PREDICTOR_INDEX_RANGE 6:0
 `define OPTYPE_RANGE 6:0
-`define LEN_TYPE 2:0
 
 `define FUNC3_ADD_SUB 3'b000
 `define FUNC3_SLL 3'b001
