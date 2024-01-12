@@ -71,7 +71,7 @@ always @(posedge clk_in) begin
                 mc_to_mem_wr <= 0;
                 status <= `STATUS_LOAD;
             end
-            else if (lsb_to_mc_ready && lsb_to_mc_opType == `OP_ST && (!io_buffer_full || (lsb_to_mc_addr != 196608 && lsb_to_mc_addr != 196612))) begin
+            else if (lsb_to_mc_ready && lsb_to_mc_opType == `OP_ST) begin
                 mc_to_mem_dout <= lsb_to_mc_data[7:0];
                 mc_to_mem_addr <= lsb_to_mc_addr;
                 mc_to_mem_wr <= 1;
@@ -123,7 +123,7 @@ always @(posedge clk_in) begin
                 mc_to_lsb_st_done <= `TRUE;
                 status <= `STATUS_STALL;
             end
-            else if (!io_buffer_full || (lsb_to_mc_addr != 196608 && lsb_to_mc_addr != 196612)) begin
+            else begin
                 mc_to_mem_addr <= mc_to_mem_addr + 1;
                 case (byte_index) 
                     3'b000: begin
