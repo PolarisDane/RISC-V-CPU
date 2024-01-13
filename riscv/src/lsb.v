@@ -80,7 +80,13 @@ always @(posedge clk_in) begin
         head <= 0;
         tail <= 0;
         lsb_to_mc_ready <= `FALSE;
+        lsb_to_mc_addr <= 0;
+        lsb_to_mc_data <= 0;
+        lsb_to_mc_len <= 0;
+        lsb_to_mc_opType <= 0;
         lsb_ready <= `FALSE;
+        lsb_result <= 0;
+        lsb_result_rob_index <= 0;
         // clearing every entry in the buffer
         for (i = 0; i < `LSB_SIZE; i = i + 1) begin
             lsb_rob_index[i] <= 0;

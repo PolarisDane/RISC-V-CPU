@@ -59,8 +59,15 @@ always @(posedge clk_in) begin
     if (rst_in) begin
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
+        if_to_mc_PC <= 0;
         if_to_dc_ready <= `FALSE;
+        if_to_dc_opType <= 0;
+        if_to_dc_PC <= 0;
+        if_to_dc_inst <= 0;
+        if_to_dc_pred_br <= 0;
         if_to_ic_inst_valid <= `FALSE;
+        if_to_ic_update_addr <= 0;
+        if_to_ic_inst <=0;
         if_to_ic_fetch_addr <= 0;
         PC <= 0;
     end
@@ -69,10 +76,18 @@ always @(posedge clk_in) begin
     end
     else if (clr_in) begin
         if_to_dc_ready <= `FALSE;
+        if_to_dc_opType <= 0;
+        if_to_dc_PC <= 0;
+        if_to_dc_inst <= 0;
+        if_to_dc_pred_br <= 0;
         if_to_ic_inst_valid <= `FALSE;
         status <= `STATUS_IDLE;
         if_to_mc_ready <= `FALSE;
+        if_to_mc_PC <= 0;
         PC <= rob_to_if_alter_PC;
+        if_to_ic_inst_valid <= `FALSE;
+        if_to_ic_update_addr <= 0;
+        if_to_ic_inst <=0;
         if_to_ic_fetch_addr <= rob_to_if_alter_PC;
     end
     else begin

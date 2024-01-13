@@ -23,8 +23,10 @@ module ALU (
 
 always @(*) begin
     alu_ready = rs_to_alu_ready;
-    alu_branch = `FALSE;
+    alu_result = 0;
     alu_rob_index = rs_to_alu_rob_index;
+    alu_branch = `FALSE;
+    alu_newPC = 0;
     case (rs_to_alu_op)
         `OPENUM_BEQ: begin
             alu_branch = (rs_to_alu_rs1 == rs_to_alu_rs2) ? `TRUE : `FALSE;

@@ -53,7 +53,7 @@ always @(posedge clk_in) begin
         mc_to_mem_addr <= 0;
         mc_to_mem_wr <= 0;
     end
-    else if (!rdy_in) begin
+    else if (!rdy_in || io_buffer_full) begin
         ;
     end
     else begin
@@ -63,21 +63,18 @@ always @(posedge clk_in) begin
             mc_to_lsb_ld_done <= `FALSE;
             mc_to_lsb_st_done <= `FALSE;
             mc_to_mem_dout <= 0;
-            mc_to_mem_addr <= 0;
             mc_to_mem_wr <= 0;
             //LSB goes first
             if (lsb_to_mc_ready && lsb_to_mc_opType == `OP_LD) begin
                 mc_to_mem_addr <= lsb_to_mc_addr;
-                mc_to_mem_wr <= 0;
                 status <= `STATUS_LOAD;
             end
             else if (lsb_to_mc_ready && lsb_to_mc_opType == `OP_ST) begin
-                mc_to_mem_wr <= 1;
+                mc_to_mem_addr <= 0;
                 status <= `STATUS_STORE;
             end
             else if (if_to_mc_ready) begin
                 mc_to_mem_addr <= if_to_mc_PC;
-                mc_to_mem_wr <= 0;
                 status <= `STATUS_IF;
             end
         end
@@ -112,10 +109,12 @@ always @(posedge clk_in) begin
                 mc_to_mem_addr <= mc_to_mem_addr + 1;
             end
         end
-        else if (status == `STATUS_STORE) begin
+        else if (status == `STATUS_STORE && (!io_buffer_full || (lsb_to_mc_addr != 196608 && lsb_to_mc_addr != 196612))) begin
+            mc_to_mem_wr <= 1;
             if (lsb_to_mc_len == byte_index) begin
                 mc_to_lsb_st_done <= `TRUE;
                 mc_to_mem_addr <= 0;
+                mc_to_mem_wr <= 0;
                 status <= `STATUS_STALL;
             end
             else begin
@@ -172,7 +171,7 @@ always @(posedge clk_in) begin
                 end
             end
         end
-        else begin
+        else if (status == `STATUS_STALL) begin
             status <= `STATUS_IDLE;
             mc_to_lsb_ld_done <= `FALSE;
             mc_to_lsb_st_done <= `FALSE;

@@ -93,7 +93,12 @@ always @(posedge clk_in) begin
         head <= 0;
         tail <= 0;
         rob_to_pr_ready <= `FALSE;
+        rob_to_pr_PC <= 0;
+        rob_to_pr_br_taken <= `FALSE;
         rob_to_reg_commit <= `FALSE;
+        rob_to_reg_index <= 0;
+        rob_to_reg_rob_index <= 0;
+        rob_to_reg_val <= 0;
         clr_in <= 0;
 
         // clearing everything in the buffer

@@ -78,6 +78,12 @@ always @(posedge clk_in) begin
             rs_busy[i] <= `FALSE;
         end
         rs_to_alu_ready <= `FALSE;
+        rs_to_alu_PC <= 0;
+        rs_to_alu_rob_index <= 0;
+        rs_to_alu_imm <= 0;
+        rs_to_alu_op <= 0;
+        rs_to_alu_rs1 <= 0;
+        rs_to_alu_rs2 <= 0;
     end
     else if (!rdy_in) begin
         ;

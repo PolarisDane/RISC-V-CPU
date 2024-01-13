@@ -72,6 +72,20 @@ integer clk_cnt;
 
 always @(*) begin
     // clk_cnt = clk_cnt + 1;
+    issue_ready = `FALSE;
+    issue_lsb_ready = `FALSE;
+    issue_rs_ready = `FALSE;
+    issue_op = `OPENUM_NOP;
+    issue_opType = if_to_dc_opType;
+    issue_rs1_val = 0;
+    issue_rs1_depend = 0;
+    issue_rs2_val = 0;
+    issue_rs2_depend = 0;
+    issue_rd = if_to_dc_inst[`RD_RANGE];
+    issue_imm = 0;
+    issue_PC = if_to_dc_PC;
+    issue_pred_br = if_to_dc_pred_br;
+    issue_rob_index = rob_to_dc_rename_index;
     if (rst_in || clr_in) begin
         issue_ready = `FALSE;
         issue_lsb_ready = `FALSE;
@@ -87,19 +101,6 @@ always @(*) begin
     end
     else begin
         issue_ready = `TRUE;
-        issue_op = `OPENUM_NOP;
-        issue_opType = if_to_dc_opType;
-        issue_rs1_val = 0;
-        issue_rs1_depend = 0;
-        issue_rs2_val = 0;
-        issue_rs2_depend = 0;
-        issue_rd = if_to_dc_inst[`RD_RANGE];
-        issue_imm = 0;
-        issue_PC = if_to_dc_PC;
-        issue_pred_br = if_to_dc_pred_br;
-        issue_rob_index = rob_to_dc_rename_index;
-        issue_lsb_ready = `FALSE;
-        issue_rs_ready = `FALSE;
         if (!reg_to_dc_rs1_depend) begin
             issue_rs1_val = reg_to_dc_rs1_val;
         end
